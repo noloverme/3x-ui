@@ -18,6 +18,7 @@ import {
   Result,
   Row,
   Select,
+  Space,
   Spin,
   Statistic,
   Switch,
@@ -1400,14 +1401,25 @@ export default function ClientsPage() {
                               {!isMobile && t('pages.clients.addClients')}
                             </Button>
                           ) : (
-                            <Tag
-                              color="blue"
-                              closable
-                              onClose={() => setSelectedRowKeys([])}
-                              style={{ marginInlineEnd: 0, padding: '4px 8px', fontSize: 13 }}
-                            >
-                              {t('pages.clients.selectedCount', { count: selectedRowKeys.length })}
-                            </Tag>
+                            <Space size={6}>
+                              <Tag
+                                color="blue"
+                                closable
+                                onClose={() => setSelectedRowKeys([])}
+                                style={{ marginInlineEnd: 0, padding: '4px 8px', fontSize: 13 }}
+                              >
+                                {t('pages.clients.selectedCount', {
+                                  count: selectedRowKeys.length,
+                                })}
+                              </Tag>
+                              <Button
+                                type="primary"
+                                icon={<UsergroupAddOutlined />}
+                                onClick={() => setBulkAttachOpen(true)}
+                              >
+                                {!isMobile && t('pages.clients.attach')}
+                              </Button>
+                            </Space>
                           )}
                           <Dropdown
                             trigger={['click']}
@@ -1475,6 +1487,12 @@ export default function ClientsPage() {
                                         icon: <UsergroupAddOutlined />,
                                         label: t('pages.clients.bulk'),
                                         onClick: () => setBulkAddOpen(true),
+                                      },
+                                      {
+                                        key: 'attach',
+                                        icon: <UsergroupAddOutlined />,
+                                        label: t('pages.clients.attach'),
+                                        onClick: () => setBulkAttachOpen(true),
                                       },
                                       {
                                         key: 'export',
@@ -1987,11 +2005,12 @@ export default function ClientsPage() {
         <LazyMount when={bulkAttachOpen}>
           <BulkAttachInboundsModal
             open={bulkAttachOpen}
-            count={selectedRowKeys.length}
+            selectedEmails={selectedRowKeys}
+            clients={clients}
             inbounds={inbounds}
             onOpenChange={setBulkAttachOpen}
-            onSubmit={async (inboundIds) => {
-              const msg = await bulkAttach([...selectedRowKeys], inboundIds);
+            onSubmit={async (emails, inboundIds) => {
+              const msg = await bulkAttach(emails, inboundIds);
               if (msg?.success) {
                 setSelectedRowKeys([]);
                 return msg.obj ?? { attached: [], skipped: [], errors: [] };
