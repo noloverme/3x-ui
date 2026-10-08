@@ -25,6 +25,7 @@ import {
   InfoCircleOutlined,
   DeleteOutlined,
   SearchOutlined,
+  OrderedListOutlined,
 } from '@ant-design/icons';
 
 import { HttpUtil } from '@/utils';
@@ -64,6 +65,7 @@ export default function InboundList({
   onGeneralAction,
   onRowAction,
   onBulkDelete,
+  onOpenSubOrder,
 }: InboundListProps) {
   const { t } = useTranslation();
   const [statsRecord, setStatsRecord] = useState<DBInboundRecord | null>(null);
@@ -209,6 +211,11 @@ export default function InboundList({
         icon: <ReloadOutlined />,
         label: t('pages.inbounds.resetAllTraffic'),
       },
+      {
+        key: 'subOrder',
+        icon: <OrderedListOutlined />,
+        label: t('pages.inbounds.subOrder', 'Порядок в подписке'),
+      },
     ],
     onClick: ({ key }) => onGeneralAction(key as GeneralAction),
   };
@@ -225,6 +232,13 @@ export default function InboundList({
             aria-label={t('pages.inbounds.addInbound')}
           >
             {!isMobile && t('pages.inbounds.addInbound')}
+          </Button>
+          <Button
+            icon={<OrderedListOutlined />}
+            onClick={onOpenSubOrder}
+            aria-label={t('pages.inbounds.subOrder', 'Порядок в подписке')}
+          >
+            {!isMobile && t('pages.inbounds.subOrder', 'Порядок в подписке')}
           </Button>
           <Dropdown trigger={['click']} menu={generalActionsMenu}>
             <Button

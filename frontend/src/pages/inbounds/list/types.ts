@@ -64,7 +64,7 @@ export type RowAction =
   | 'delAllClients'
   | 'clone';
 
-export type GeneralAction = 'import' | 'export' | 'subs' | 'resetInbounds';
+export type GeneralAction = 'import' | 'export' | 'subs' | 'resetInbounds' | 'subOrder';
 
 export interface InboundListProps {
   dbInbounds: DBInboundRecord[];
@@ -84,4 +84,5 @@ export interface InboundListProps {
   onGeneralAction: (key: GeneralAction) => void;
   onRowAction: (action: { key: RowAction; dbInbound: DBInboundRecord }) => void;
   onBulkDelete: (ids: number[]) => Promise<boolean>;
+  onOpenSubOrder?: () => void;
 }

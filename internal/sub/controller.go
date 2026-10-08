@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -385,15 +386,60 @@ func (a *SUBController) configuredSubscriptionPathOwner(candidate string) string
 // It reports whether the request was handled. The remark template's per-client
 // info is for the content a client app imports — the raw subscription body. A
 // browser viewing the HTML info page gets clean, name-only remarks (usage is
+func parseFirstValidIP(val string) string {
+	val = strings.TrimSpace(val)
+	if val == "" {
+		return ""
+	}
+	for _, part := range strings.Split(val, ",") {
+		part = strings.TrimSpace(part)
+		if host, _, err := net.SplitHostPort(part); err == nil {
+			part = host
+		}
+		if ip := net.ParseIP(part); ip != nil {
+			if !ip.IsUnspecified() && !ip.IsLoopback() {
+				return ip.String()
+			}
+		}
+	}
+	return ""
+}
+
 func getSubClientIP(c *gin.Context) string {
 	if c == nil {
 		return ""
 	}
-	if cfIP := strings.TrimSpace(c.GetHeader("CF-Connecting-IP")); cfIP != "" {
-		return cfIP
+	for _, header := range []string{
+		"CF-Connecting-IP",
+		"True-Client-IP",
+		"X-Real-IP",
+		"X-Client-IP",
+		"X-Forwarded-For",
+		"X-Original-Forwarded-For",
+	} {
+		if ip := parseFirstValidIP(c.GetHeader(header)); ip != "" {
+			return ip
+		}
 	}
-	if realIP := strings.TrimSpace(c.GetHeader("X-Real-IP")); realIP != "" {
-		return realIP
+	if fwd := c.GetHeader("Forwarded"); fwd != "" {
+		for _, part := range strings.Split(fwd, ";") {
+			part = strings.TrimSpace(part)
+			if strings.HasPrefix(strings.ToLower(part), "for=") {
+				target := strings.Trim(part[4:], "\"[]")
+				if ip := parseFirstValidIP(target); ip != "" {
+					return ip
+				}
+			}
+		}
+	}
+	if c.Request != nil && c.Request.RemoteAddr != "" {
+		remote := c.Request.RemoteAddr
+		if host, _, err := net.SplitHostPort(remote); err == nil {
+			remote = host
+		}
+		if ip := net.ParseIP(strings.TrimSpace(remote)); ip != nil && !ip.IsLoopback() && !ip.IsUnspecified() {
+			return ip.String()
+		}
 	}
 	return c.ClientIP()
 }

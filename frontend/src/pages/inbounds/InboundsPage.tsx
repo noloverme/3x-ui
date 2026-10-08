@@ -56,6 +56,7 @@ const AttachClientsModal = lazy(() => import('./clients/AttachClientsModal'));
 const AttachExistingClientsModal = lazy(() => import('./clients/AttachExistingClientsModal'));
 const DetachClientsModal = lazy(() => import('./clients/DetachClientsModal'));
 const AddClientsToGroupModal = lazy(() => import('./clients/AddClientsToGroupModal'));
+const SubOrderModal = lazy(() => import('./SubOrderModal'));
 
 type RowAction =
   | 'edit'
@@ -73,7 +74,7 @@ type RowAction =
   | 'addToGroup'
   | 'clone';
 
-type GeneralAction = 'import' | 'export' | 'subs' | 'resetInbounds';
+type GeneralAction = 'import' | 'export' | 'subs' | 'resetInbounds' | 'subOrder';
 
 interface ClientMatchTarget {
   id?: string;
@@ -182,6 +183,8 @@ export default function InboundsPage() {
 
   const [cloneOpen, setCloneOpen] = useState(false);
   const [cloneSource, setCloneSource] = useState<DBInbound | null>(null);
+
+  const [subOrderOpen, setSubOrderOpen] = useState(false);
 
   const [textOpen, setTextOpen] = useState(false);
   const [textTitle, setTextTitle] = useState('');
@@ -621,6 +624,9 @@ export default function InboundsPage() {
             },
           });
           break;
+        case 'subOrder':
+          setSubOrderOpen(true);
+          break;
         default:
           messageApi.info(`General action "${key}" — coming in a later 5f subphase`);
       }
@@ -810,6 +816,7 @@ export default function InboundsPage() {
                         onRowAction({ key, dbInbound: dbInbound as unknown as DBInbound })
                       }
                       onBulkDelete={confirmBulkDelete}
+                      onOpenSubOrder={() => setSubOrderOpen(true)}
                     />
                   </Col>
                 </Row>
@@ -923,6 +930,15 @@ export default function InboundsPage() {
             loading={promptLoading}
             json={promptJson}
             onConfirm={onPromptConfirm}
+          />
+        </LazyMount>
+
+        <LazyMount when={subOrderOpen}>
+          <SubOrderModal
+            open={subOrderOpen}
+            onClose={() => setSubOrderOpen(false)}
+            dbInbounds={dbInbounds}
+            onSaved={refresh}
           />
         </LazyMount>
       </Layout>
