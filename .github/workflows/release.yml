@@ -69,7 +69,15 @@ jobs:
       - name: Build 3X-UI
         run: |
           CURL_RETRY="--retry 5 --retry-all-errors --retry-delay 3"
-          fetch() { wget -q --tries=5 --waitretry=10 --retry-on-http-error=429,500,502,503 "$@"; }
+          fetch() {
+            if [ "$1" = "-O" ]; then
+              out="$2"
+              shift 2
+              curl -fsSL $CURL_RETRY -o "$out" "$1"
+            else
+              curl -fsSL $CURL_RETRY -O "$1"
+            fi
+          }
           export CGO_ENABLED=1
           export GOOS=linux
           export GOARCH=${{ matrix.platform }}
