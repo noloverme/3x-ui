@@ -112,7 +112,7 @@ function TrafficDemo() {
           <InputNumber min={0} style={{ width: '100%' }} />
         </FormField>
         <Typography.Text type="secondary">
-          Form state: {totalBytes.toLocaleString()} bytes
+          Form state: {totalBytes.toLocaleString('en-US')} bytes
         </Typography.Text>
       </Form>
     </FormProvider>
@@ -203,7 +203,9 @@ export const TrafficTransform: Story = {
     const input = canvas.getByRole('spinbutton');
     await userEvent.clear(input);
     await userEvent.type(input, '100');
-    await expect(await canvas.findByText(/107,374,182,400 bytes/)).toBeVisible();
+    await expect(
+      await canvas.findByText(/107[,.\s\u00a0]?374[,.\s\u00a0]?182[,.\s\u00a0]?400 bytes/),
+    ).toBeVisible();
   },
 };
 

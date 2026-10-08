@@ -339,9 +339,10 @@ func TestClientHwidAndIPPersistence(t *testing.T) {
 
 	var hwidEntry, noHwidEntry *ClientHwidInfo
 	for i := range list {
-		if list[i].IP == "5.6.7.8" {
+		switch list[i].IP {
+		case "5.6.7.8":
 			hwidEntry = &list[i]
-		} else if list[i].IP == "9.10.11.12" {
+		case "9.10.11.12":
 			noHwidEntry = &list[i]
 		}
 	}
@@ -352,4 +353,3 @@ func TestClientHwidAndIPPersistence(t *testing.T) {
 		t.Fatalf("noHwidEntry missing: %+v", noHwidEntry)
 	}
 }
-

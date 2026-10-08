@@ -381,11 +381,8 @@ func (a *SUBController) configuredSubscriptionPathOwner(candidate string) string
 	return ""
 }
 
-// maybeServeSubPage renders the HTML info page when the request comes from a
-// browser (Accept: text/html) or explicitly asks for it (?html=1 or ?view=html).
-// It reports whether the request was handled. The remark template's per-client
-// info is for the content a client app imports — the raw subscription body. A
-// browser viewing the HTML info page gets clean, name-only remarks (usage is
+// parseFirstValidIP parses a comma-separated list of IPs or host:port strings and returns
+// the first valid non-loopback, non-unspecified IP.
 func parseFirstValidIP(val string) string {
 	val = strings.TrimSpace(val)
 	if val == "" {
@@ -405,6 +402,7 @@ func parseFirstValidIP(val string) string {
 	return ""
 }
 
+// getSubClientIP inspects standard proxy headers and returns the client's real IP address.
 func getSubClientIP(c *gin.Context) string {
 	if c == nil {
 		return ""
@@ -444,6 +442,9 @@ func getSubClientIP(c *gin.Context) string {
 	return c.ClientIP()
 }
 
+// maybeServeSubPage renders the HTML info page when the request comes from a
+// browser (Accept: text/html) or explicitly asks for it (?html=1 or ?view=html).
+// It reports whether the request was handled.
 func (a *SUBController) maybeServeSubPage(c *gin.Context) bool {
 	accept := c.GetHeader("Accept")
 	wantsHTML := strings.Contains(strings.ToLower(accept), "text/html") || c.Query("html") == "1" || strings.EqualFold(c.Query("view"), "html")

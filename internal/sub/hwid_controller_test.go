@@ -279,4 +279,3 @@ func TestSubscriptionCapturesClientIPAndHWID(t *testing.T) {
 		t.Fatalf("row IP = %q, want 203.0.113.195", rows[0].IP)
 	}
 }
-

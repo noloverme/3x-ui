@@ -180,7 +180,7 @@ export default function BulkAttachInboundsModal({
         title={
           <Space>
             <UsergroupAddOutlined />
-            <span>Привязка протоколов (соединений) к клиентам</span>
+            <span>{t('pages.clients.attachToInboundsTitle', { count: targetEmails.length })}</span>
           </Space>
         }
         okText={`Привязать (${targetEmails.length} клиентов к ${targetIds.length} протоколам)`}
@@ -199,7 +199,7 @@ export default function BulkAttachInboundsModal({
           showIcon
           className="mb-12"
           message="Массовое добавление протоколов к клиентам"
-          description="Выберите клиентов и протоколы (входящие соединения). Выбранные протоколы добавятся к клиентам с сохранением учетных данных и лимитов. Если у клиента протокол уже был — он будет пропущен без дублирования."
+          description={t('pages.clients.attachToInboundsDesc', { count: targetEmails.length })}
         />
 
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
@@ -279,7 +279,7 @@ export default function BulkAttachInboundsModal({
               value={targetIds}
               onChange={setTargetIds}
               options={targetOptions}
-              placeholder="Выберите протоколы (входящие)..."
+              placeholder={t('pages.clients.attachToInboundsTargets')}
               showSearch={{ optionFilterProp: 'label' }}
               maxTagCount="responsive"
               allowClear

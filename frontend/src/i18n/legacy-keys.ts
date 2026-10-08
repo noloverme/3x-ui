@@ -1,0 +1,20 @@
+// Preserves keys in translation dictionaries for backward compatibility
+export const LEGACY_I18N_KEYS = [
+  'pages.sponsors.title',
+  'pages.sponsors.intro',
+  'pages.sponsors.become',
+  'pages.sponsors.yourBrand',
+  'pages.sponsors.yourBrandText',
+  'pages.sponsors.placements',
+  'pages.sponsors.placementDashboard',
+  'pages.sponsors.placementDashboardDesc',
+  'pages.sponsors.placementSidebar',
+  'pages.sponsors.placementSidebarDesc',
+  'pages.sponsors.placementLogin',
+  'pages.sponsors.placementLoginDesc',
+  'pages.sponsors.placementPage',
+  'pages.sponsors.placementPageDesc',
+  'pages.sponsors.available',
+  'pages.sponsors.takenUntil',
+  'pages.sponsors.activeCount',
+];
