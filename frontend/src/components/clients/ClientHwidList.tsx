@@ -109,6 +109,15 @@ export default function ClientHwidListModal({
                     </Typography.Text>
                   </>
                 )}
+                {entry.ip && (
+                  <>
+                    <br />
+                    <Typography.Text type="secondary">
+                      IP: <Typography.Text code>{entry.ip}</Typography.Text>
+                      {entry.ips && entry.ips.length > 1 && <span> ({entry.ips.join(', ')})</span>}
+                    </Typography.Text>
+                  </>
+                )}
               </div>
               <Popconfirm
                 title={t('pages.clients.deleteHwidConfirm')}

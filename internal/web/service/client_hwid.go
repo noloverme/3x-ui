@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -12,11 +13,11 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type HwidRequest struct {
 	Hwid        string
+	IP          string
 	UserAgent   string
 	DeviceOS    string
 	OsVersion   string
@@ -51,14 +52,16 @@ const (
 var errClientHwidWriteNotSerialized = errors.New("client HWID write requires the serialized transaction")
 
 type ClientHwidInfo struct {
-	Id          int    `json:"id"`
-	FirstSeen   int64  `json:"firstSeen"`
-	LastSeen    int64  `json:"lastSeen"`
-	UserAgent   string `json:"userAgent"`
-	DeviceOS    string `json:"deviceOs"`
-	OsVersion   string `json:"osVersion"`
-	DeviceModel string `json:"deviceModel"`
-	Fingerprint string `json:"fingerprint"`
+	Id          int      `json:"id"`
+	FirstSeen   int64    `json:"firstSeen"`
+	LastSeen    int64    `json:"lastSeen"`
+	UserAgent   string   `json:"userAgent"`
+	DeviceOS    string   `json:"deviceOs"`
+	OsVersion   string   `json:"osVersion"`
+	DeviceModel string   `json:"deviceModel"`
+	Fingerprint string   `json:"fingerprint"`
+	IP          string   `json:"ip"`
+	Ips         []string `json:"ips"`
 }
 
 func hashHwid(raw string) string {
@@ -85,11 +88,43 @@ func trimHwidMeta(s string) string {
 func normalizeHwidRequest(req HwidRequest) HwidRequest {
 	return HwidRequest{
 		Hwid:        strings.TrimSpace(req.Hwid),
+		IP:          strings.TrimSpace(req.IP),
 		UserAgent:   trimHwidMeta(req.UserAgent),
 		DeviceOS:    trimHwidMeta(req.DeviceOS),
 		OsVersion:   trimHwidMeta(req.OsVersion),
 		DeviceModel: trimHwidMeta(req.DeviceModel),
 	}
+}
+
+func mergeIps(existingIpsJson, newIP string) string {
+	newIP = strings.TrimSpace(newIP)
+	if newIP == "" {
+		return existingIpsJson
+	}
+	var ips []string
+	if existingIpsJson != "" {
+		_ = json.Unmarshal([]byte(existingIpsJson), &ips)
+	}
+	for _, ip := range ips {
+		if ip == newIP {
+			data, _ := json.Marshal(ips)
+			return string(data)
+		}
+	}
+	ips = append(ips, newIP)
+	data, _ := json.Marshal(ips)
+	return string(data)
+}
+
+func parseIps(ipsJson, fallbackIP string) []string {
+	var ips []string
+	if ipsJson != "" {
+		_ = json.Unmarshal([]byte(ipsJson), &ips)
+	}
+	if len(ips) == 0 && fallbackIP != "" {
+		ips = []string{fallbackIP}
+	}
+	return ips
 }
 
 func effectiveHwidLimitForSubID(tx *gorm.DB, subID string) (int, error) {
@@ -117,7 +152,7 @@ func (s *ClientService) EnforceHwidForSubID(subID string, req HwidRequest) (Hwid
 	req = normalizeHwidRequest(req)
 	if limit <= 0 {
 		res.Allowed = true
-		if len(req.Hwid) >= minHwidLength {
+		if len(req.Hwid) >= minHwidLength || req.IP != "" {
 			trackUnlimitedHwid(db, subID, req)
 		}
 		return res, nil
@@ -146,9 +181,14 @@ func (s *ClientService) EnforceHwidForSubID(subID string, req HwidRequest) (Hwid
 		var existing model.ClientHwid
 		err = tx.Where("sub_id = ? AND hwid_hash = ?", subID, hwidHash).First(&existing).Error
 		if err == nil {
-			if err := tx.Model(&model.ClientHwid{}).Where("id = ?", existing.Id).Updates(map[string]any{
+			updates := map[string]any{
 				"last_seen": now, "user_agent": req.UserAgent, "device_os": req.DeviceOS, "os_version": req.OsVersion, "device_model": req.DeviceModel,
-			}).Error; err != nil {
+			}
+			if req.IP != "" {
+				updates["ip"] = req.IP
+				updates["ips"] = mergeIps(existing.Ips, req.IP)
+			}
+			if err := tx.Model(&model.ClientHwid{}).Where("id = ?", existing.Id).Updates(updates).Error; err != nil {
 				return err
 			}
 			var count int64
@@ -173,7 +213,12 @@ func (s *ClientService) EnforceHwidForSubID(subID string, req HwidRequest) (Hwid
 			res.LimitReached = true
 			return nil
 		}
-		if err := tx.Create(&model.ClientHwid{SubID: subID, HwidHash: hwidHash, FirstSeen: now, LastSeen: now, UserAgent: req.UserAgent, DeviceOS: req.DeviceOS, OsVersion: req.OsVersion, DeviceModel: req.DeviceModel}).Error; err != nil {
+		ipsJson := ""
+		if req.IP != "" {
+			data, _ := json.Marshal([]string{req.IP})
+			ipsJson = string(data)
+		}
+		if err := tx.Create(&model.ClientHwid{SubID: subID, HwidHash: hwidHash, FirstSeen: now, LastSeen: now, UserAgent: req.UserAgent, DeviceOS: req.DeviceOS, OsVersion: req.OsVersion, DeviceModel: req.DeviceModel, IP: req.IP, Ips: ipsJson}).Error; err != nil {
 			return err
 		}
 		res.Allowed = true
@@ -187,14 +232,77 @@ func (s *ClientService) EnforceHwidForSubID(subID string, req HwidRequest) (Hwid
 // trackUnlimitedHwid lists devices of a sub with no HWID limit in the panel. It is
 // best-effort: a failed write must not deny a subscription nothing restricts.
 func trackUnlimitedHwid(db *gorm.DB, subID string, req HwidRequest) {
+	hwidHash := ""
+	if len(req.Hwid) >= minHwidLength {
+		hwidHash = hashHwid(req.Hwid)
+	} else if req.IP != "" {
+		hwidHash = hashHwid("ip:" + req.IP)
+	} else {
+		return
+	}
+
 	now := time.Now().UnixMilli()
-	err := db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "sub_id"}, {Name: "hwid_hash"}},
-		DoUpdates: clause.AssignmentColumns([]string{"last_seen", "user_agent", "device_os", "os_version", "device_model"}),
-	}).Create(&model.ClientHwid{SubID: subID, HwidHash: hashHwid(req.Hwid), FirstSeen: now, LastSeen: now, UserAgent: req.UserAgent, DeviceOS: req.DeviceOS, OsVersion: req.OsVersion, DeviceModel: req.DeviceModel}).Error
-	if err != nil {
+	var existing model.ClientHwid
+	err := db.Where("sub_id = ? AND hwid_hash = ?", subID, hwidHash).First(&existing).Error
+	if err == nil {
+		updates := map[string]any{
+			"last_seen": now,
+		}
+		if req.UserAgent != "" {
+			updates["user_agent"] = req.UserAgent
+		}
+		if req.DeviceOS != "" {
+			updates["device_os"] = req.DeviceOS
+		}
+		if req.OsVersion != "" {
+			updates["os_version"] = req.OsVersion
+		}
+		if req.DeviceModel != "" {
+			updates["device_model"] = req.DeviceModel
+		}
+		if req.IP != "" {
+			updates["ip"] = req.IP
+			updates["ips"] = mergeIps(existing.Ips, req.IP)
+		}
+		if err := db.Model(&model.ClientHwid{}).Where("id = ?", existing.Id).Updates(updates).Error; err != nil {
+			logger.Warning("track HWID for unlimited subscription failed:", err)
+		}
+		return
+	}
+
+	ipsJson := ""
+	if req.IP != "" {
+		data, _ := json.Marshal([]string{req.IP})
+		ipsJson = string(data)
+	}
+	newRec := model.ClientHwid{
+		SubID:       subID,
+		HwidHash:    hwidHash,
+		FirstSeen:   now,
+		LastSeen:    now,
+		UserAgent:   req.UserAgent,
+		DeviceOS:    req.DeviceOS,
+		OsVersion:   req.OsVersion,
+		DeviceModel: req.DeviceModel,
+		IP:          req.IP,
+		Ips:         ipsJson,
+	}
+	if err := db.Create(&newRec).Error; err != nil {
 		logger.Warning("track HWID for unlimited subscription failed:", err)
 	}
+}
+
+func (s *ClientService) TrackSubscriptionAccess(subID string, req HwidRequest) error {
+	subID = strings.TrimSpace(subID)
+	if subID == "" {
+		return nil
+	}
+	req = normalizeHwidRequest(req)
+	if len(req.Hwid) < minHwidLength && req.IP == "" {
+		return nil
+	}
+	trackUnlimitedHwid(database.GetDB(), subID, req)
+	return nil
 }
 
 // HwidSlotStatusForSubID is SELECT-only: it must never write client_hwids or
@@ -255,6 +363,7 @@ func (s *ClientService) ListClientHwids(email string) ([]ClientHwidInfo, error) 
 	}
 	out := make([]ClientHwidInfo, 0, len(rows))
 	for _, r := range rows {
+		ips := parseIps(r.Ips, r.IP)
 		out = append(out, ClientHwidInfo{
 			Id:          r.Id,
 			FirstSeen:   r.FirstSeen,
@@ -264,6 +373,8 @@ func (s *ClientService) ListClientHwids(email string) ([]ClientHwidInfo, error) 
 			OsVersion:   r.OsVersion,
 			DeviceModel: r.DeviceModel,
 			Fingerprint: shortHwidFingerprint(r.HwidHash),
+			IP:          r.IP,
+			Ips:         ips,
 		})
 	}
 	return out, nil

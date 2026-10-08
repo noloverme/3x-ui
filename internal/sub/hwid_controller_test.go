@@ -254,3 +254,29 @@ func TestSubscriptionHwidStatusHidesUnknownVersusDisabled(t *testing.T) {
 		t.Fatalf("404 body = %q, want empty", disabled.Body.String())
 	}
 }
+
+func TestSubscriptionCapturesClientIPAndHWID(t *testing.T) {
+	router, subID := initHwidSubRouter(t, 0)
+	req := httptest.NewRequest(http.MethodGet, "/sub/"+subID, nil)
+	req.Host = "sub.example.com"
+	req.Header.Set("X-HWID", "client-device-123")
+	req.Header.Set("CF-Connecting-IP", "203.0.113.195")
+	req.Header.Set("User-Agent", "TestClient/1.0")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("sub status = %d, want 200", rec.Code)
+	}
+
+	var rows []model.ClientHwid
+	if err := database.GetDB().Where("sub_id = ?", subID).Find(&rows).Error; err != nil {
+		t.Fatalf("query client_hwids: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("rows count = %d, want 1", len(rows))
+	}
+	if rows[0].IP != "203.0.113.195" {
+		t.Fatalf("row IP = %q, want 203.0.113.195", rows[0].IP)
+	}
+}
+

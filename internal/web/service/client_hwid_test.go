@@ -297,3 +297,59 @@ func TestClientHwidSlotStatus(t *testing.T) {
 		t.Fatalf("disabled subId = (%+v, %v, %v), want zero status and found=false", status, found, err)
 	}
 }
+
+func TestClientHwidAndIPPersistence(t *testing.T) {
+	initClientHwidTestDB(t)
+	svc := &ClientService{}
+	seedHwidClient(t, 0)
+
+	res, err := svc.EnforceHwidForSubID("sub-hwid", HwidRequest{
+		Hwid:      "device-xyz",
+		IP:        "1.2.3.4",
+		UserAgent: "Happ/1.0",
+	})
+	if err != nil || !res.Allowed {
+		t.Fatalf("first connection: res=%+v, err=%v", res, err)
+	}
+
+	res, err = svc.EnforceHwidForSubID("sub-hwid", HwidRequest{
+		Hwid:      "device-xyz",
+		IP:        "5.6.7.8",
+		UserAgent: "Happ/1.0",
+	})
+	if err != nil || !res.Allowed {
+		t.Fatalf("second connection: res=%+v, err=%v", res, err)
+	}
+
+	res, err = svc.EnforceHwidForSubID("sub-hwid", HwidRequest{
+		IP:        "9.10.11.12",
+		UserAgent: "ClashMeta/1.0",
+	})
+	if err != nil || !res.Allowed {
+		t.Fatalf("no-hwid connection: res=%+v, err=%v", res, err)
+	}
+
+	list, err := svc.ListClientHwids("hwid@example.com")
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	if len(list) != 2 {
+		t.Fatalf("want 2 entries, got %d: %+v", len(list), list)
+	}
+
+	var hwidEntry, noHwidEntry *ClientHwidInfo
+	for i := range list {
+		if list[i].IP == "5.6.7.8" {
+			hwidEntry = &list[i]
+		} else if list[i].IP == "9.10.11.12" {
+			noHwidEntry = &list[i]
+		}
+	}
+	if hwidEntry == nil || len(hwidEntry.Ips) != 2 {
+		t.Fatalf("hwidEntry missing or wrong Ips: %+v", hwidEntry)
+	}
+	if noHwidEntry == nil || noHwidEntry.UserAgent != "ClashMeta/1.0" {
+		t.Fatalf("noHwidEntry missing: %+v", noHwidEntry)
+	}
+}
+

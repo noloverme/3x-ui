@@ -385,7 +385,19 @@ func (a *SUBController) configuredSubscriptionPathOwner(candidate string) string
 // It reports whether the request was handled. The remark template's per-client
 // info is for the content a client app imports — the raw subscription body. A
 // browser viewing the HTML info page gets clean, name-only remarks (usage is
-// shown in the page summary).
+func getSubClientIP(c *gin.Context) string {
+	if c == nil {
+		return ""
+	}
+	if cfIP := strings.TrimSpace(c.GetHeader("CF-Connecting-IP")); cfIP != "" {
+		return cfIP
+	}
+	if realIP := strings.TrimSpace(c.GetHeader("X-Real-IP")); realIP != "" {
+		return realIP
+	}
+	return c.ClientIP()
+}
+
 func (a *SUBController) maybeServeSubPage(c *gin.Context) bool {
 	accept := c.GetHeader("Accept")
 	wantsHTML := strings.Contains(strings.ToLower(accept), "text/html") || c.Query("html") == "1" || strings.EqualFold(c.Query("view"), "html")
@@ -396,6 +408,14 @@ func (a *SUBController) maybeServeSubPage(c *gin.Context) bool {
 	if !ok {
 		return true
 	}
+	_ = a.clientService.TrackSubscriptionAccess(c.Param("subid"), service.HwidRequest{
+		Hwid:        c.GetHeader("X-HWID"),
+		IP:          getSubClientIP(c),
+		UserAgent:   c.GetHeader("User-Agent"),
+		DeviceOS:    c.GetHeader("X-Device-OS"),
+		OsVersion:   c.GetHeader("X-Ver-OS"),
+		DeviceModel: c.GetHeader("X-Device-Model"),
+	})
 	a.serveSubPage(c, page.BasePath, page)
 	return true
 }
@@ -408,6 +428,14 @@ func (a *SUBController) maybeServeSubInfo(c *gin.Context) bool {
 	if !ok {
 		return true
 	}
+	_ = a.clientService.TrackSubscriptionAccess(c.Param("subid"), service.HwidRequest{
+		Hwid:        c.GetHeader("X-HWID"),
+		IP:          getSubClientIP(c),
+		UserAgent:   c.GetHeader("User-Agent"),
+		DeviceOS:    c.GetHeader("X-Device-OS"),
+		OsVersion:   c.GetHeader("X-Ver-OS"),
+		DeviceModel: c.GetHeader("X-Device-Model"),
+	})
 	info := a.subPageContext(page)
 	delete(info, "links")
 	info["emails"] = dedupeEmails(page.Emails)
@@ -699,8 +727,13 @@ func (a *SUBController) subPageContext(page PageData) map[string]any {
 }
 
 func (a *SUBController) enforceHwid(c *gin.Context) bool {
+	hwid := c.GetHeader("X-HWID")
+	if hwid == "" {
+		hwid = c.Query("hwid")
+	}
 	result, err := a.clientService.EnforceHwidForSubID(c.Param("subid"), service.HwidRequest{
-		Hwid:        c.GetHeader("X-HWID"),
+		Hwid:        hwid,
+		IP:          getSubClientIP(c),
 		UserAgent:   c.GetHeader("User-Agent"),
 		DeviceOS:    c.GetHeader("X-Device-OS"),
 		OsVersion:   c.GetHeader("X-Ver-OS"),

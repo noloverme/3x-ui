@@ -1018,6 +1018,8 @@ type ClientHwid struct {
 	DeviceOS    string `json:"deviceOs" gorm:"column:device_os"`
 	OsVersion   string `json:"osVersion" gorm:"column:os_version"`
 	DeviceModel string `json:"deviceModel" gorm:"column:device_model"`
+	IP          string `json:"ip" gorm:"column:ip"`
+	Ips         string `json:"ips" gorm:"column:ips"`
 }
 
 func (ClientHwid) TableName() string { return "client_hwids" }

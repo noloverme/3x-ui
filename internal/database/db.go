@@ -115,6 +115,24 @@ func migrateInboundExcludeFromSubColumn() error {
 	return migrator.AddColumn(&model.Inbound{}, "ExcludeFromSub")
 }
 
+func migrateClientHwidIPColumns() error {
+	migrator := db.Migrator()
+	if !migrator.HasTable(&model.ClientHwid{}) {
+		return nil
+	}
+	if !migrator.HasColumn(&model.ClientHwid{}, "ip") {
+		if err := migrator.AddColumn(&model.ClientHwid{}, "IP"); err != nil {
+			return err
+		}
+	}
+	if !migrator.HasColumn(&model.ClientHwid{}, "ips") {
+		if err := migrator.AddColumn(&model.ClientHwid{}, "Ips"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func initModels() error {
 	if err := migrateClientTrafficLastSubFetchColumn(); err != nil {
 		return err
@@ -123,6 +141,9 @@ func initModels() error {
 		return err
 	}
 	if err := migrateInboundExcludeFromSubColumn(); err != nil {
+		return err
+	}
+	if err := migrateClientHwidIPColumns(); err != nil {
 		return err
 	}
 	models := allModels()
