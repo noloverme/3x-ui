@@ -513,17 +513,42 @@ func leastLoadCosts(balancer *model.SubBalancer, members []balMember) []any {
 	return costs
 }
 
+// isPrivateHost reports whether host is a private/local IP address or a private domain name
+// (e.g. localhost, .local, RFC1918 addresses), matching Xray's requiresTransportSecurity criteria.
+func isPrivateHost(address string) bool {
+	host := address
+	if h, _, err := net.SplitHostPort(address); err == nil {
+		host = h
+	}
+	host = strings.ToLower(strings.TrimSpace(host))
+	if host == "" {
+		return false
+	}
+	if host == "localhost" ||
+		strings.HasSuffix(host, ".local") ||
+		strings.HasSuffix(host, ".internal") ||
+		strings.HasSuffix(host, ".lan") ||
+		strings.HasSuffix(host, ".home.arpa") {
+		return true
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		return ip.IsLoopback() || ip.IsPrivate() || ip.IsUnspecified() || ip.IsLinkLocalUnicast()
+	}
+	return false
+}
+
 // isXrayOutboundValid verifies that an outbound satisfies Xray-core constraints.
-// Specifically, Xray strictly prohibits VLESS without TLS or other encryption
-// when the server address is a public IP.
+// Specifically, Xray strictly prohibits VLESS and Trojan without TLS or other encryption
+// unless the server address is a private IP or private domain (see Xray requiresTransportSecurity).
 func isXrayOutboundValid(outbound map[string]any) bool {
 	if outbound == nil {
 		return false
 	}
 	protocol, _ := outbound["protocol"].(string)
+	streamSettings, _ := outbound["streamSettings"].(map[string]any)
+	security, _ := streamSettings["security"].(string)
+
 	if protocol == "vless" {
-		streamSettings, _ := outbound["streamSettings"].(map[string]any)
-		security, _ := streamSettings["security"].(string)
 		if security != "tls" && security != "reality" {
 			settings, _ := outbound["settings"].(map[string]any)
 			encryption, _ := settings["encryption"].(string)
@@ -536,18 +561,30 @@ func isXrayOutboundValid(outbound map[string]any) bool {
 						}
 					}
 				}
-				host := address
-				if h, _, err := net.SplitHostPort(address); err == nil {
-					host = h
-				}
-				if ip := net.ParseIP(host); ip != nil {
-					if !ip.IsLoopback() && !ip.IsPrivate() && !ip.IsUnspecified() && !ip.IsLinkLocalUnicast() {
-						return false
-					}
+				if !isPrivateHost(address) {
+					return false
 				}
 			}
 		}
 	}
+
+	if protocol == "trojan" {
+		if security != "tls" && security != "reality" {
+			settings, _ := outbound["settings"].(map[string]any)
+			address, _ := settings["address"].(string)
+			if address == "" {
+				if servers, ok := settings["servers"].([]any); ok && len(servers) > 0 {
+					if s0, ok := servers[0].(map[string]any); ok {
+						address, _ = s0["address"].(string)
+					}
+				}
+			}
+			if !isPrivateHost(address) {
+				return false
+			}
+		}
+	}
+
 	return true
 }
 

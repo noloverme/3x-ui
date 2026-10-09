@@ -558,10 +558,28 @@ func TestIsXrayOutboundValid(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "vless none with domain is valid",
+			name: "vless none with public domain is invalid",
 			outbound: map[string]any{
 				"protocol":       "vless",
 				"settings":       map[string]any{"address": "cdn.example.com", "encryption": "none"},
+				"streamSettings": map[string]any{"security": "none"},
+			},
+			want: false,
+		},
+		{
+			name: "vless none with private domain is valid",
+			outbound: map[string]any{
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "myhost.local", "encryption": "none"},
+				"streamSettings": map[string]any{"security": "none"},
+			},
+			want: true,
+		},
+		{
+			name: "vless none with localhost is valid",
+			outbound: map[string]any{
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "localhost", "encryption": "none"},
 				"streamSettings": map[string]any{"security": "none"},
 			},
 			want: true,
@@ -590,6 +608,24 @@ func TestIsXrayOutboundValid(t *testing.T) {
 				"protocol":       "vmess",
 				"settings":       map[string]any{"address": "198.51.100.1"},
 				"streamSettings": map[string]any{"security": "none"},
+			},
+			want: true,
+		},
+		{
+			name: "trojan none with public domain is invalid",
+			outbound: map[string]any{
+				"protocol":       "trojan",
+				"settings":       map[string]any{"address": "trojan.example.com"},
+				"streamSettings": map[string]any{"security": "none"},
+			},
+			want: false,
+		},
+		{
+			name: "trojan tls with public domain is valid",
+			outbound: map[string]any{
+				"protocol":       "trojan",
+				"settings":       map[string]any{"address": "trojan.example.com"},
+				"streamSettings": map[string]any{"security": "tls"},
 			},
 			want: true,
 		},
@@ -641,7 +677,7 @@ func TestBuildBalancerConfigSkipsInvalidVlessOutbounds(t *testing.T) {
 			{
 				"tag":            "proxy",
 				"protocol":       "vless",
-				"settings":       map[string]any{"address": "198.51.100.3", "encryption": "none"},
+				"settings":       map[string]any{"address": "sub.example.com", "encryption": "none"},
 				"streamSettings": map[string]any{"security": "none"},
 			},
 		},
