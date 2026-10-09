@@ -62,7 +62,7 @@ export class AllSetting {
   subClashPath = '/clash/';
   subAutoSelect = false;
   subAutoSelectTitle = 'Auto';
-  subDefaultFormat = 'json';
+  subDefaultFormat = '';
   subDomain = '';
   externalTrafficInformEnable = false;
   externalTrafficInformURI = '';

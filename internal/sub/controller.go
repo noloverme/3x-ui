@@ -607,13 +607,14 @@ func (a *SUBController) subs(c *gin.Context) {
 				defaultFormat = "json"
 			}
 		}
-		if defaultFormat == "json" {
+		switch defaultFormat {
+		case "json":
 			if a.serveJsonBody(c, a.jsonAlwaysArray, "application/json; charset=utf-8", false) {
 				a.recordSubscriptionFetch(c)
 				logSubscriptionRoute(userAgent, "json")
 				return
 			}
-		} else if defaultFormat == "clash" || defaultFormat == "yaml" {
+		case "clash", "yaml":
 			if a.serveClashBody(c, false, false) {
 				a.recordSubscriptionFetch(c)
 				logSubscriptionRoute(userAgent, "clash")

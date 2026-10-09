@@ -841,4 +841,3 @@ func TestStandardSubscriptionDefaultFormat(t *testing.T) {
 		}
 	})
 }
-
