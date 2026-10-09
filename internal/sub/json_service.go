@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"net"
 	"net/url"
 	"slices"
 	"sort"
@@ -512,6 +513,44 @@ func leastLoadCosts(balancer *model.SubBalancer, members []balMember) []any {
 	return costs
 }
 
+// isXrayOutboundValid verifies that an outbound satisfies Xray-core constraints.
+// Specifically, Xray strictly prohibits VLESS without TLS or other encryption
+// when the server address is a public IP.
+func isXrayOutboundValid(outbound map[string]any) bool {
+	if outbound == nil {
+		return false
+	}
+	protocol, _ := outbound["protocol"].(string)
+	if protocol == "vless" {
+		streamSettings, _ := outbound["streamSettings"].(map[string]any)
+		security, _ := streamSettings["security"].(string)
+		if security != "tls" && security != "reality" {
+			settings, _ := outbound["settings"].(map[string]any)
+			encryption, _ := settings["encryption"].(string)
+			if encryption == "" || encryption == "none" {
+				address, _ := settings["address"].(string)
+				if address == "" {
+					if vnext, ok := settings["vnext"].([]any); ok && len(vnext) > 0 {
+						if v0, ok := vnext[0].(map[string]any); ok {
+							address, _ = v0["address"].(string)
+						}
+					}
+				}
+				host := address
+				if h, _, err := net.SplitHostPort(address); err == nil {
+					host = h
+				}
+				if ip := net.ParseIP(host); ip != nil {
+					if !ip.IsLoopback() && !ip.IsPrivate() && !ip.IsUnspecified() && !ip.IsLinkLocalUnicast() {
+						return false
+					}
+				}
+			}
+		}
+	}
+	return true
+}
+
 // buildBalancerConfig assembles the balancer profile: members retagged under a
 // per-balancer prefix, a routing.balancers entry, and (for leastPing/leastLoad) an observatory.
 func (s *SubJsonService) buildBalancerConfig(balancer *model.SubBalancer, entries []subConfigEntry, entryProxies [][]map[string]any) json_util.RawMessage {
@@ -529,6 +568,9 @@ func (s *SubJsonService) buildBalancerConfig(balancer *model.SubBalancer, entrie
 			continue
 		}
 		for _, outbound := range entryProxies[i] {
+			if !isXrayOutboundValid(outbound) {
+				continue
+			}
 			protocol, _ := outbound["protocol"].(string)
 			base := prefix + balancerMemberSuffix(protocol)
 			tag := base
@@ -547,7 +589,7 @@ func (s *SubJsonService) buildBalancerConfig(balancer *model.SubBalancer, entrie
 			}
 		}
 	}
-	if len(proxies) == 0 {
+	if len(proxies) == 0 || (balancer.Id == 0 && len(proxies) < 2) {
 		return nil
 	}
 
@@ -922,8 +964,52 @@ func (s *SubJsonService) genVless(subReq *SubService, inbound *model.Inbound, st
 	inboundSettings := subReq.linkSettings(inbound)
 	encryption, _ := inboundSettings["encryption"].(string)
 
+	address := inbound.Listen
+	var streamMap map[string]any
+	if err := json.Unmarshal(streamSettings, &streamMap); err == nil && streamMap != nil {
+		security, _ := streamMap["security"].(string)
+		if security != "tls" && security != "reality" {
+			host := address
+			if h, _, err := net.SplitHostPort(address); err == nil {
+				host = h
+			}
+			if ip := net.ParseIP(host); ip != nil && !ip.IsLoopback() && !ip.IsPrivate() {
+				var hostHeader string
+				if ws, ok := streamMap["wsSettings"].(map[string]any); ok {
+					if headers, ok := ws["headers"].(map[string]any); ok {
+						if h, ok := headers["Host"].(string); ok && h != "" {
+							hostHeader = h
+						} else if h, ok := headers["host"].(string); ok && h != "" {
+							hostHeader = h
+						}
+					}
+				}
+				if hostHeader == "" {
+					if hu, ok := streamMap["httpupgradeSettings"].(map[string]any); ok {
+						if headers, ok := hu["headers"].(map[string]any); ok {
+							if h, ok := headers["Host"].(string); ok && h != "" {
+								hostHeader = h
+							} else if h, ok := headers["host"].(string); ok && h != "" {
+								hostHeader = h
+							}
+						}
+					}
+				}
+				if hostHeader != "" {
+					hCandidate := hostHeader
+					if h, _, err := net.SplitHostPort(hostHeader); err == nil {
+						hCandidate = h
+					}
+					if net.ParseIP(hCandidate) == nil {
+						address = hostHeader
+					}
+				}
+			}
+		}
+	}
+
 	settings := map[string]any{
-		"address":    inbound.Listen,
+		"address":    address,
 		"port":       inbound.Port,
 		"id":         client.ID,
 		"encryption": encryption,

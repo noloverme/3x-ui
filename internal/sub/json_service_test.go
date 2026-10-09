@@ -3,6 +3,7 @@ package sub
 import (
 	"encoding/json"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
@@ -529,5 +530,150 @@ func TestSubJsonServiceSkipsTUIC(t *testing.T) {
 		"sub.example.com",
 	); len(got) != 0 {
 		t.Fatalf("getConfig emitted %d unsupported TUIC Xray config(s)", len(got))
+	}
+}
+
+func TestIsXrayOutboundValid(t *testing.T) {
+	tests := []struct {
+		name     string
+		outbound map[string]any
+		want     bool
+	}{
+		{
+			name: "vless reality public ip is valid",
+			outbound: map[string]any{
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "198.51.100.1"},
+				"streamSettings": map[string]any{"security": "reality"},
+			},
+			want: true,
+		},
+		{
+			name: "vless tls public ip is valid",
+			outbound: map[string]any{
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "198.51.100.1"},
+				"streamSettings": map[string]any{"security": "tls"},
+			},
+			want: true,
+		},
+		{
+			name: "vless none with domain is valid",
+			outbound: map[string]any{
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "cdn.example.com", "encryption": "none"},
+				"streamSettings": map[string]any{"security": "none"},
+			},
+			want: true,
+		},
+		{
+			name: "vless none with private ip is valid",
+			outbound: map[string]any{
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "127.0.0.1", "encryption": "none"},
+				"streamSettings": map[string]any{"security": "none"},
+			},
+			want: true,
+		},
+		{
+			name: "vless none with public ip is invalid",
+			outbound: map[string]any{
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "198.51.100.1", "encryption": "none"},
+				"streamSettings": map[string]any{"security": "none"},
+			},
+			want: false,
+		},
+		{
+			name: "vmess public ip is valid",
+			outbound: map[string]any{
+				"protocol":       "vmess",
+				"settings":       map[string]any{"address": "198.51.100.1"},
+				"streamSettings": map[string]any{"security": "none"},
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isXrayOutboundValid(tt.outbound); got != tt.want {
+				t.Fatalf("isXrayOutboundValid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBuildBalancerConfigSkipsInvalidVlessOutbounds(t *testing.T) {
+	s := NewSubJsonService("", "", "", "", nil)
+	autoBal := &model.SubBalancer{
+		Id:         0,
+		Remark:     "Auto",
+		Strategy:   "leastPing",
+		InboundIds: []int{1, 2, 3},
+		Enabled:    true,
+	}
+
+	entries := []subConfigEntry{
+		{kind: 0, id: 1},
+		{kind: 0, id: 2},
+		{kind: 0, id: 3},
+	}
+
+	entryProxies := [][]map[string]any{
+		{
+			{
+				"tag":            "proxy",
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "198.51.100.1"},
+				"streamSettings": map[string]any{"security": "reality"},
+			},
+		},
+		{
+			{
+				"tag":            "proxy",
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "198.51.100.2"},
+				"streamSettings": map[string]any{"security": "tls"},
+			},
+		},
+		{
+			{
+				"tag":            "proxy",
+				"protocol":       "vless",
+				"settings":       map[string]any{"address": "198.51.100.3", "encryption": "none"},
+				"streamSettings": map[string]any{"security": "none"},
+			},
+		},
+	}
+
+	raw := s.buildBalancerConfig(autoBal, entries, entryProxies)
+	if raw == nil {
+		t.Fatal("buildBalancerConfig returned nil, expected valid balancer")
+	}
+
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+
+	outbounds, _ := doc["outbounds"].([]any)
+	var tags []string
+	for _, o := range outbounds {
+		if om, ok := o.(map[string]any); ok {
+			if tag, ok := om["tag"].(string); ok {
+				tags = append(tags, tag)
+			}
+		}
+	}
+
+	for _, tag := range tags {
+		if tag == "bal-0-vless-3" {
+			t.Fatalf("balancer contains invalid outbound %q: %v", tag, tags)
+		}
+	}
+
+	if !slices.Contains(tags, "bal-0-vless") || !slices.Contains(tags, "bal-0-vless-2") {
+		t.Fatalf("balancer missing expected valid outbounds: %v", tags)
 	}
 }
