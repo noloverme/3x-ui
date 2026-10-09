@@ -565,6 +565,21 @@ func (a *SUBController) subs(c *gin.Context) {
 	if !a.enforceHwid(c) {
 		return
 	}
+	format := strings.ToLower(c.Query("format"))
+	if format == "json" {
+		if a.serveJsonBody(c, a.jsonAlwaysArray, "application/json; charset=utf-8", false) {
+			a.recordSubscriptionFetch(c)
+			logSubscriptionRoute(userAgent, "json")
+			return
+		}
+	}
+	if format == "clash" || format == "yaml" {
+		if a.serveClashBody(c, false, false) {
+			a.recordSubscriptionFetch(c)
+			logSubscriptionRoute(userAgent, "clash")
+			return
+		}
+	}
 	if shouldAutoServeClash(a.subClashAutoDetect, a.clashEnabled, false, userAgent, a.clashUserAgent) && a.serveClashBody(c, false, false) {
 		a.recordSubscriptionFetch(c)
 		logSubscriptionRoute(userAgent, "clash")
