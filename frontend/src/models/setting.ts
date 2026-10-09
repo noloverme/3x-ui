@@ -60,6 +60,8 @@ export class AllSetting {
   subJsonPath = '/json/';
   subClashEnable = false;
   subClashPath = '/clash/';
+  subAutoSelect = false;
+  subAutoSelectTitle = 'Auto';
   subDomain = '';
   externalTrafficInformEnable = false;
   externalTrafficInformURI = '';

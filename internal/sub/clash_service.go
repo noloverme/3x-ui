@@ -19,15 +19,22 @@ import (
 )
 
 type SubClashService struct {
-	enableRouting bool
-	clashRules    string
-	SubService    *SubService
+	enableRouting   bool
+	clashRules      string
+	autoSelect      bool
+	autoSelectTitle string
+	SubService      *SubService
 }
 
 var errNoLegacyClashProxies = errors.New("no Clash for Windows-compatible proxies found; use the Mihomo subscription for modern proxy types")
 
 func NewSubClashService(enableRouting bool, clashRules string, subService *SubService) *SubClashService {
 	return &SubClashService{enableRouting: enableRouting, clashRules: clashRules, SubService: subService}
+}
+
+func (s *SubClashService) SetAutoSelect(enable bool, title string) {
+	s.autoSelect = enable
+	s.autoSelectTitle = title
 }
 
 func (s *SubClashService) GetClash(subId string, host string) (string, string, error) {
@@ -142,25 +149,58 @@ func (s *SubClashService) getClash(subId string, host string, legacy bool) (stri
 
 	ensureUniqueProxyNames(proxies)
 
+	var realProxyNames []string
 	proxyNames := make([]string, 0, len(proxies)+1)
 	for _, proxy := range proxies {
-		if isDummyProxy(proxy) && len(proxies) > 1 {
+		if isDummyProxy(proxy) {
+			if len(proxies) == 1 {
+				if name, ok := proxy["name"].(string); ok && name != "" {
+					proxyNames = append(proxyNames, name)
+				}
+			}
 			continue
 		}
 		if name, ok := proxy["name"].(string); ok && name != "" {
 			proxyNames = append(proxyNames, name)
+			realProxyNames = append(realProxyNames, name)
 		}
 	}
-	proxyNames = append(proxyNames, "DIRECT")
+
+	autoTitle := strings.TrimSpace(s.autoSelectTitle)
+	if autoTitle == "" {
+		autoTitle = "Auto"
+	}
+
+	shouldAddAuto := s.autoSelect && len(realProxyNames) >= 2
+
+	var selectProxies []string
+	if shouldAddAuto {
+		selectProxies = append(selectProxies, autoTitle)
+	}
+	selectProxies = append(selectProxies, proxyNames...)
+	selectProxies = append(selectProxies, "DIRECT")
+
+	proxyGroups := []map[string]any{{
+		"name":    "PROXY",
+		"type":    "select",
+		"proxies": selectProxies,
+	}}
+
+	if shouldAddAuto {
+		proxyGroups = append(proxyGroups, map[string]any{
+			"name":      autoTitle,
+			"type":      "url-test",
+			"url":       "https://www.gstatic.com/generate_204",
+			"interval":  300,
+			"tolerance": 50,
+			"proxies":   realProxyNames,
+		})
+	}
 
 	config := map[string]any{
-		"proxies": proxies,
-		"proxy-groups": []map[string]any{{
-			"name":    "PROXY",
-			"type":    "select",
-			"proxies": proxyNames,
-		}},
-		"rules": []string{"MATCH,PROXY"},
+		"proxies":      proxies,
+		"proxy-groups": proxyGroups,
+		"rules":        []string{"MATCH,PROXY"},
 	}
 
 	// Custom Clash routing can inject Mihomo-only groups, rules, providers or a

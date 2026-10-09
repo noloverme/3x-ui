@@ -130,6 +130,9 @@ type subControllerConfig struct {
 
 	subIncyEnableRouting bool
 	subIncyRoutingRules  string
+
+	subAutoSelect      bool
+	subAutoSelectTitle string
 }
 
 type SUBControllerOption func(*subControllerConfig)
@@ -258,6 +261,14 @@ func WithSUBIncyRoutingRules(value string) SUBControllerOption {
 	return func(config *subControllerConfig) { config.subIncyRoutingRules = value }
 }
 
+func WithSUBAutoSelect(value bool) SUBControllerOption {
+	return func(config *subControllerConfig) { config.subAutoSelect = value }
+}
+
+func WithSUBAutoSelectTitle(value string) SUBControllerOption {
+	return func(config *subControllerConfig) { config.subAutoSelectTitle = value }
+}
+
 func WithSUBHappConfig(value HappConfig) SUBControllerOption {
 	return func(config *subControllerConfig) { config.happConfig = value }
 }
@@ -289,6 +300,11 @@ func NewSUBController(g *gin.RouterGroup, options ...SUBControllerOption) *SUBCo
 	subJsonSvc := NewSubJsonService(config.subJsonMux, config.subJsonRules, config.subJsonFinalMask, config.subJsonRoutingRules, sub)
 	subJsonSvc.SetObservatoryConfig(config.subJsonObservatory)
 	subJsonSvc.SetDnsConfig(config.subJsonDns)
+	subJsonSvc.SetAutoSelect(config.subAutoSelect, config.subAutoSelectTitle)
+
+	subClashSvc := NewSubClashService(config.subClashEnableRouting, config.subClashRules, sub)
+	subClashSvc.SetAutoSelect(config.subAutoSelect, config.subAutoSelectTitle)
+
 	a := &SUBController{
 		subTitle:            config.subTitle,
 		subSupportUrl:       config.subSupportURL,
@@ -320,7 +336,7 @@ func NewSUBController(g *gin.RouterGroup, options ...SUBControllerOption) *SUBCo
 
 		subService:      sub,
 		subJsonService:  subJsonSvc,
-		subClashService: NewSubClashService(config.subClashEnableRouting, config.subClashRules, sub),
+		subClashService: subClashSvc,
 
 		subTemplateCache: map[string]*cachedSubTemplate{},
 	}

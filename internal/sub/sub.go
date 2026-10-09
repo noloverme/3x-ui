@@ -229,6 +229,16 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 		SubIncyRoutingRules = ""
 	}
 
+	subAutoSelect, err := s.settingService.GetSubAutoSelect()
+	if err != nil {
+		subAutoSelect = false
+	}
+
+	subAutoSelectTitle, err := s.settingService.GetSubAutoSelectTitle()
+	if err != nil {
+		subAutoSelectTitle = "Auto"
+	}
+
 	happCfg := HappConfig{}
 	happCfg.AutoDetect, _ = s.settingService.GetSubHappAutoDetect()
 	happCfg.ProviderId, _ = s.settingService.GetSubHappProviderId()
@@ -373,6 +383,8 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 		WithSUBIncyConfig(incyCfg),
 		WithSUBIncyEnableRouting(SubIncyEnableRouting),
 		WithSUBIncyRoutingRules(SubIncyRoutingRules),
+		WithSUBAutoSelect(subAutoSelect),
+		WithSUBAutoSelectTitle(subAutoSelectTitle),
 	)
 
 	return engine, nil

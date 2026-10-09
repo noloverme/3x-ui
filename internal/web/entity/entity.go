@@ -129,6 +129,8 @@ type AllSetting struct {
 	SubJsonObservatory          string `json:"subJsonObservatory" form:"subJsonObservatory"`
 	SubThemeDir                 string `json:"subThemeDir" form:"subThemeDir"`
 	SubHideSettings             bool   `json:"subHideSettings" form:"subHideSettings"`
+	SubAutoSelect               bool   `json:"subAutoSelect" form:"subAutoSelect"`
+	SubAutoSelectTitle          string `json:"subAutoSelectTitle" form:"subAutoSelectTitle"`
 
 	// Happ client customization settings (app-management / routing / UX).
 	SubHappAutoDetect          bool   `json:"subHappAutoDetect" form:"subHappAutoDetect"`

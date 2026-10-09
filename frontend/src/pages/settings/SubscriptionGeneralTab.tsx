@@ -148,6 +148,29 @@ export default function SubscriptionGeneralTab({
                   onChange={(e) => updateSetting({ subURI: e.target.value })}
                 />
               </SettingListItem>
+              <SettingListItem
+                paddings="small"
+                title={t('pages.settings.subAutoSelect')}
+                description={t('pages.settings.subAutoSelectDesc')}
+              >
+                <Switch
+                  checked={allSetting.subAutoSelect}
+                  onChange={(v) => updateSetting({ subAutoSelect: v })}
+                />
+              </SettingListItem>
+              {allSetting.subAutoSelect && (
+                <SettingListItem
+                  paddings="small"
+                  title={t('pages.settings.subAutoSelectTitle')}
+                  description={t('pages.settings.subAutoSelectTitleDesc')}
+                >
+                  <Input
+                    value={allSetting.subAutoSelectTitle}
+                    placeholder="Auto"
+                    onChange={(e) => updateSetting({ subAutoSelectTitle: e.target.value })}
+                  />
+                </SettingListItem>
+              )}
             </>
           ),
         },

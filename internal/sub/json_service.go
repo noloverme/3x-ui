@@ -40,6 +40,9 @@ type SubJsonService struct {
 	// dnsBlock is the panel DNS override, fixed for the service's lifetime.
 	dnsBlock map[string]any
 
+	autoSelect      bool
+	autoSelectTitle string
+
 	SubService *SubService
 }
 
@@ -81,6 +84,11 @@ func NewSubJsonService(mux string, rules string, finalMask string, routingRules 
 		observatory:      defaultSubBalancerObservatoryConfig(),
 		SubService:       subService,
 	}
+}
+
+func (s *SubJsonService) SetAutoSelect(enable bool, title string) {
+	s.autoSelect = enable
+	s.autoSelectTitle = title
 }
 
 // Re-resolved per call so an upstream edit reaches the documents without a
@@ -361,25 +369,52 @@ func (s *SubJsonService) balancerObservatory(prefix string) map[string]any {
 }
 
 // appendBalancerEntries appends one entry per enabled balancer that has at
-// least one member outbound among the inbound entries.
+// least one member outbound among the inbound entries, and synthesizes an
+// auto-selection balancer if subAutoSelect is enabled and len(inbounds) >= 2.
 func (s *SubJsonService) appendBalancerEntries(entries []subConfigEntry) []subConfigEntry {
 	balancers := getEnabledSubBalancers()
-	if len(balancers) == 0 {
+	if len(balancers) == 0 && !s.autoSelect {
 		return entries
 	}
 	// Pre-pass: pull each inbound doc's proxy outbound once so every balancer
 	// reuses it instead of re-unmarshalling the whole document per balancer.
 	entryProxies := make([][]map[string]any, len(entries))
+	var inboundIds []int
 	for i, entry := range entries {
 		if entry.kind != 0 {
 			continue
 		}
+		inboundIds = append(inboundIds, entry.id)
 		for _, config := range entry.configs {
 			if proxy := extractProxyOutbound(config); proxy != nil {
 				entryProxies[i] = append(entryProxies[i], proxy)
 			}
 		}
 	}
+
+	if s.autoSelect && len(inboundIds) >= 2 {
+		autoTitle := strings.TrimSpace(s.autoSelectTitle)
+		if autoTitle == "" {
+			autoTitle = "Auto"
+		}
+		autoBal := &model.SubBalancer{
+			Id:         0,
+			Remark:     autoTitle,
+			Strategy:   "leastPing",
+			InboundIds: inboundIds,
+			SortOrder:  -999999,
+			Enabled:    true,
+		}
+		if config := s.buildBalancerConfig(autoBal, entries, entryProxies); config != nil {
+			entries = append([]subConfigEntry{{
+				sortIndex: -999999,
+				kind:      1,
+				id:        0,
+				configs:   []json_util.RawMessage{config},
+			}}, entries...)
+		}
+	}
+
 	for i := range balancers {
 		config := s.buildBalancerConfig(&balancers[i], entries, entryProxies)
 		if config == nil {

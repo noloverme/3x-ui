@@ -224,6 +224,12 @@
           "subAnnounce": {
             "type": "string"
           },
+          "subAutoSelect": {
+            "type": "boolean"
+          },
+          "subAutoSelectTitle": {
+            "type": "string"
+          },
           "subCalendarExpireInclusive": {
             "type": "boolean"
           },
@@ -656,6 +662,8 @@
           "smtpTo",
           "smtpUsername",
           "subAnnounce",
+          "subAutoSelect",
+          "subAutoSelectTitle",
           "subCalendarExpireInclusive",
           "subCertFile",
           "subClashAutoDetect",
@@ -998,6 +1006,12 @@
             "type": "string"
           },
           "subAnnounce": {
+            "type": "string"
+          },
+          "subAutoSelect": {
+            "type": "boolean"
+          },
+          "subAutoSelectTitle": {
             "type": "string"
           },
           "subCalendarExpireInclusive": {
@@ -1440,6 +1454,8 @@
           "smtpTo",
           "smtpUsername",
           "subAnnounce",
+          "subAutoSelect",
+          "subAutoSelectTitle",
           "subCalendarExpireInclusive",
           "subCertFile",
           "subClashAutoDetect",

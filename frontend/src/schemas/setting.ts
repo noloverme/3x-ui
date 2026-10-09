@@ -66,6 +66,8 @@ export const AllSettingSchema = z
     subJsonPath: absolutePath.optional(),
     subClashEnable: z.boolean().optional(),
     subClashPath: absolutePath.optional(),
+    subAutoSelect: z.boolean().optional(),
+    subAutoSelectTitle: z.string().optional(),
     subDomain: z.string().optional(),
     externalTrafficInformEnable: z.boolean().optional(),
     externalTrafficInformURI: z.string().optional(),

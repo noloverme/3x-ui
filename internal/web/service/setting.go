@@ -193,6 +193,8 @@ var defaultValueMap = map[string]string{
 	"subJsonFinalMask":            "",
 	"subJsonObservatory":          "",
 	"subThemeDir":                 "",
+	"subAutoSelect":               "false",
+	"subAutoSelectTitle":          "Auto",
 	"datepicker":                  "gregorian",
 	"warp":                        "",
 	"warpUpdateInterval":          "0",
@@ -1267,6 +1269,26 @@ func (s *SettingService) GetSubJsonObservatory() (string, error) {
 
 func (s *SettingService) GetSubThemeDir() (string, error) {
 	return s.getString("subThemeDir")
+}
+
+func (s *SettingService) GetSubAutoSelect() (bool, error) {
+	return s.getBool("subAutoSelect")
+}
+
+func (s *SettingService) SetSubAutoSelect(enable bool) error {
+	return s.setBool("subAutoSelect", enable)
+}
+
+func (s *SettingService) GetSubAutoSelectTitle() (string, error) {
+	title, err := s.getString("subAutoSelectTitle")
+	if err != nil || strings.TrimSpace(title) == "" {
+		return "Auto", nil
+	}
+	return strings.TrimSpace(title), nil
+}
+
+func (s *SettingService) SetSubAutoSelectTitle(title string) error {
+	return s.setString("subAutoSelectTitle", strings.TrimSpace(title))
 }
 
 func (s *SettingService) GetDatepicker() (string, error) {
