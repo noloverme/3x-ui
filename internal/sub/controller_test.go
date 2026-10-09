@@ -802,3 +802,43 @@ func TestLegacyClashEndpointNormalizesShadowsocksCipher(t *testing.T) {
 		})
 	}
 }
+
+func TestStandardSubscriptionDefaultFormat(t *testing.T) {
+	seedSubDB(t)
+	seedSubInbound(t, "s1", "def-fmt", 4910, 1, `{"network":"tcp","security":"none"}`)
+	gin.SetMode(gin.TestMode)
+
+	t.Run("default format json serves JSON", func(t *testing.T) {
+		router := gin.New()
+		NewSUBController(router.Group("/"), WithSUBJsonEnabled(true), WithSUBDefaultFormat("json"))
+		req := httptest.NewRequest(http.MethodGet, "http://sub.example.com/sub/s1", nil)
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+
+		if resp.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200", resp.Code)
+		}
+		if got := resp.Header().Get("Content-Type"); got != "application/json; charset=utf-8" {
+			t.Fatalf("Content-Type = %q, want JSON", got)
+		}
+		if !strings.Contains(resp.Body.String(), "outbounds") {
+			t.Fatalf("body missing outbounds: %s", resp.Body.String())
+		}
+	})
+
+	t.Run("explicit format raw overrides default format json", func(t *testing.T) {
+		router := gin.New()
+		NewSUBController(router.Group("/"), WithSUBJsonEnabled(true), WithSUBDefaultFormat("json"))
+		req := httptest.NewRequest(http.MethodGet, "http://sub.example.com/sub/s1?format=raw", nil)
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+
+		if resp.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200", resp.Code)
+		}
+		if got := resp.Header().Get("Content-Type"); got != "text/plain; charset=utf-8" {
+			t.Fatalf("Content-Type = %q, want raw plain text", got)
+		}
+	})
+}
+

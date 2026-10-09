@@ -195,7 +195,7 @@ var defaultValueMap = map[string]string{
 	"subThemeDir":                 "",
 	"subAutoSelect":               "false",
 	"subAutoSelectTitle":          "Auto",
-	"subDefaultFormat":            "json",
+	"subDefaultFormat":            "",
 	"datepicker":                  "gregorian",
 	"warp":                        "",
 	"warpUpdateInterval":          "0",
@@ -1294,8 +1294,8 @@ func (s *SettingService) SetSubAutoSelectTitle(title string) error {
 
 func (s *SettingService) GetSubDefaultFormat() (string, error) {
 	format, err := s.getString("subDefaultFormat")
-	if err != nil || strings.TrimSpace(format) == "" {
-		return "json", nil
+	if err != nil {
+		return "", err
 	}
 	return strings.ToLower(strings.TrimSpace(format)), nil
 }

@@ -79,6 +79,7 @@ type SUBController struct {
 	jsonEnabled        bool
 	clashEnabled       bool
 	subEncrypt         bool
+	subDefaultFormat   string
 	updateInterval     string
 
 	subService      *SubService
@@ -133,6 +134,7 @@ type subControllerConfig struct {
 
 	subAutoSelect      bool
 	subAutoSelectTitle string
+	subDefaultFormat   string
 }
 
 type SUBControllerOption func(*subControllerConfig)
@@ -269,6 +271,10 @@ func WithSUBAutoSelectTitle(value string) SUBControllerOption {
 	return func(config *subControllerConfig) { config.subAutoSelectTitle = value }
 }
 
+func WithSUBDefaultFormat(value string) SUBControllerOption {
+	return func(config *subControllerConfig) { config.subDefaultFormat = value }
+}
+
 func WithSUBHappConfig(value HappConfig) SUBControllerOption {
 	return func(config *subControllerConfig) { config.happConfig = value }
 }
@@ -332,6 +338,7 @@ func NewSUBController(g *gin.RouterGroup, options ...SUBControllerOption) *SUBCo
 		jsonEnabled:        config.subJsonEnabled,
 		clashEnabled:       config.subClashEnabled,
 		subEncrypt:         config.subEncrypt,
+		subDefaultFormat:   config.subDefaultFormat,
 		updateInterval:     config.updateInterval,
 
 		subService:      sub,
@@ -566,13 +573,6 @@ func (a *SUBController) subs(c *gin.Context) {
 		return
 	}
 	format := strings.ToLower(c.Query("format"))
-	if format == "" {
-		if df, err := a.settingService.GetSubDefaultFormat(); err == nil && df != "" {
-			format = strings.ToLower(df)
-		} else {
-			format = "json"
-		}
-	}
 	if format == "json" {
 		if a.serveJsonBody(c, a.jsonAlwaysArray, "application/json; charset=utf-8", false) {
 			a.recordSubscriptionFetch(c)
@@ -587,15 +587,39 @@ func (a *SUBController) subs(c *gin.Context) {
 			return
 		}
 	}
-	if shouldAutoServeClash(a.subClashAutoDetect, a.clashEnabled, false, userAgent, a.clashUserAgent) && a.serveClashBody(c, false, false) {
+	if format == "raw" {
+		// Explicit raw request bypasses auto-detection and default fallback
+	} else if shouldAutoServeClash(a.subClashAutoDetect, a.clashEnabled, false, userAgent, a.clashUserAgent) && a.serveClashBody(c, false, false) {
 		a.recordSubscriptionFetch(c)
 		logSubscriptionRoute(userAgent, "clash")
 		return
-	}
-	if shouldAutoServeJson(a.jsonAutoDetect, a.jsonEnabled, false, userAgent, a.jsonUserAgent) && a.serveJsonBody(c, true, "application/json; charset=utf-8", false) {
+	} else if shouldAutoServeJson(a.jsonAutoDetect, a.jsonEnabled, false, userAgent, a.jsonUserAgent) && a.serveJsonBody(c, true, "application/json; charset=utf-8", false) {
 		a.recordSubscriptionFetch(c)
 		logSubscriptionRoute(userAgent, "json")
 		return
+	} else {
+		defaultFormat := a.subDefaultFormat
+		if df, err := a.settingService.GetSubDefaultFormat(); err == nil && df != "" {
+			defaultFormat = df
+		}
+		if defaultFormat == "" {
+			if autoSelect, _ := a.settingService.GetSubAutoSelect(); autoSelect {
+				defaultFormat = "json"
+			}
+		}
+		if defaultFormat == "json" {
+			if a.serveJsonBody(c, a.jsonAlwaysArray, "application/json; charset=utf-8", false) {
+				a.recordSubscriptionFetch(c)
+				logSubscriptionRoute(userAgent, "json")
+				return
+			}
+		} else if defaultFormat == "clash" || defaultFormat == "yaml" {
+			if a.serveClashBody(c, false, false) {
+				a.recordSubscriptionFetch(c)
+				logSubscriptionRoute(userAgent, "clash")
+				return
+			}
+		}
 	}
 	logSubscriptionRoute(userAgent, "raw")
 	subId := c.Param("subid")
