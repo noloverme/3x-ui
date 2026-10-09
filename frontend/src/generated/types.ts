@@ -78,6 +78,7 @@ export interface AllSetting {
   subClashRules: string;
   subClashURI: string;
   subClashUserAgentRegex: string;
+  subDefaultFormat: string;
   subDomain: string;
   subEnable: boolean;
   subEnableRouting: boolean;
@@ -268,6 +269,7 @@ export interface AllSettingView {
   subClashRules: string;
   subClashURI: string;
   subClashUserAgentRegex: string;
+  subDefaultFormat: string;
   subDomain: string;
   subEnable: boolean;
   subEnableRouting: boolean;

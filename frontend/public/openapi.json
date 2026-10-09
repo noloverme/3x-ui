@@ -257,6 +257,9 @@
           "subClashUserAgentRegex": {
             "type": "string"
           },
+          "subDefaultFormat": {
+            "type": "string"
+          },
           "subDomain": {
             "type": "string"
           },
@@ -673,6 +676,7 @@
           "subClashRules",
           "subClashURI",
           "subClashUserAgentRegex",
+          "subDefaultFormat",
           "subDomain",
           "subEnable",
           "subEnableRouting",
@@ -1039,6 +1043,9 @@
             "type": "string"
           },
           "subClashUserAgentRegex": {
+            "type": "string"
+          },
+          "subDefaultFormat": {
             "type": "string"
           },
           "subDomain": {
@@ -1465,6 +1472,7 @@
           "subClashRules",
           "subClashURI",
           "subClashUserAgentRegex",
+          "subDefaultFormat",
           "subDomain",
           "subEnable",
           "subEnableRouting",

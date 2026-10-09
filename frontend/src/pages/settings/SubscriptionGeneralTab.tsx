@@ -171,6 +171,22 @@ export default function SubscriptionGeneralTab({
                   />
                 </SettingListItem>
               )}
+              <SettingListItem
+                paddings="small"
+                title={t('pages.settings.subDefaultFormat')}
+                description={t('pages.settings.subDefaultFormatDesc')}
+              >
+                <Select
+                  value={allSetting.subDefaultFormat || 'json'}
+                  style={{ width: '100%' }}
+                  onChange={(v) => updateSetting({ subDefaultFormat: v })}
+                  options={[
+                    { value: 'json', label: t('pages.settings.subDefaultFormatJson') },
+                    { value: 'raw', label: t('pages.settings.subDefaultFormatRaw') },
+                    { value: 'clash', label: t('pages.settings.subDefaultFormatClash') },
+                  ]}
+                />
+              </SettingListItem>
             </>
           ),
         },

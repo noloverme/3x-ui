@@ -231,6 +231,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "subClashUserAgentRegex": {
         "type": "string"
       },
+      "subDefaultFormat": {
+        "type": "string"
+      },
       "subDomain": {
         "type": "string"
       },
@@ -647,6 +650,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "subClashRules",
       "subClashURI",
       "subClashUserAgentRegex",
+      "subDefaultFormat",
       "subDomain",
       "subEnable",
       "subEnableRouting",
@@ -1013,6 +1017,9 @@ export const SCHEMAS: Record<string, unknown> = {
         "type": "string"
       },
       "subClashUserAgentRegex": {
+        "type": "string"
+      },
+      "subDefaultFormat": {
         "type": "string"
       },
       "subDomain": {
@@ -1439,6 +1446,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "subClashRules",
       "subClashURI",
       "subClashUserAgentRegex",
+      "subDefaultFormat",
       "subDomain",
       "subEnable",
       "subEnableRouting",

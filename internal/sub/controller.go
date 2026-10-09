@@ -566,6 +566,13 @@ func (a *SUBController) subs(c *gin.Context) {
 		return
 	}
 	format := strings.ToLower(c.Query("format"))
+	if format == "" {
+		if df, err := a.settingService.GetSubDefaultFormat(); err == nil && df != "" {
+			format = strings.ToLower(df)
+		} else {
+			format = "json"
+		}
+	}
 	if format == "json" {
 		if a.serveJsonBody(c, a.jsonAlwaysArray, "application/json; charset=utf-8", false) {
 			a.recordSubscriptionFetch(c)
