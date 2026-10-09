@@ -166,12 +166,21 @@ func (s *SubClashService) getClash(subId string, host string, legacy bool) (stri
 		}
 	}
 
+	autoSelect := s.autoSelect
 	autoTitle := strings.TrimSpace(s.autoSelectTitle)
+	if s.SubService != nil {
+		if enabled, err := s.SubService.settingService.GetSubAutoSelect(); err == nil {
+			autoSelect = enabled
+		}
+		if title, err := s.SubService.settingService.GetSubAutoSelectTitle(); err == nil && title != "" {
+			autoTitle = strings.TrimSpace(title)
+		}
+	}
 	if autoTitle == "" {
 		autoTitle = "Auto"
 	}
 
-	shouldAddAuto := s.autoSelect && len(realProxyNames) >= 2
+	shouldAddAuto := autoSelect && len(realProxyNames) >= 2
 
 	var selectProxies []string
 	if shouldAddAuto {

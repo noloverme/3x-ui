@@ -392,11 +392,21 @@ func (s *SubJsonService) appendBalancerEntries(entries []subConfigEntry) []subCo
 		}
 	}
 
-	if s.autoSelect && len(inboundIds) >= 2 {
-		autoTitle := strings.TrimSpace(s.autoSelectTitle)
-		if autoTitle == "" {
-			autoTitle = "Auto"
+	autoSelect := s.autoSelect
+	autoTitle := strings.TrimSpace(s.autoSelectTitle)
+	if s.SubService != nil {
+		if enabled, err := s.SubService.settingService.GetSubAutoSelect(); err == nil {
+			autoSelect = enabled
 		}
+		if title, err := s.SubService.settingService.GetSubAutoSelectTitle(); err == nil && title != "" {
+			autoTitle = strings.TrimSpace(title)
+		}
+	}
+	if autoTitle == "" {
+		autoTitle = "Auto"
+	}
+
+	if autoSelect && len(inboundIds) >= 2 {
 		autoBal := &model.SubBalancer{
 			Id:         0,
 			Remark:     autoTitle,
