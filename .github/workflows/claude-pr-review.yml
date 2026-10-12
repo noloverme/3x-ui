@@ -14,14 +14,15 @@ jobs:
   # the model: `prepare` before it, `post` after it.
   prepare:
     if: >-
-      (github.event_name == 'pull_request_target'
-       && github.event.pull_request.user.type != 'Bot'
-       && !github.event.pull_request.draft)
-      || (github.event_name == 'issue_comment'
-          && github.event.issue.pull_request
-          && github.event.issue.state == 'open'
-          && startsWith(github.event.comment.body, '@claude review')
-          && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+      github.repository == 'MHSanaei/3x-ui'
+      && ((github.event_name == 'pull_request_target'
+           && github.event.pull_request.user.type != 'Bot'
+           && !github.event.pull_request.draft)
+          || (github.event_name == 'issue_comment'
+              && github.event.issue.pull_request
+              && github.event.issue.state == 'open'
+              && startsWith(github.event.comment.body, '@claude review')
+              && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
