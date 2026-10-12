@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'MHSanaei/3x-ui' || (secrets.DOCKER_HUB_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '')
+    if: github.repository == 'MHSanaei/3x-ui'
     runs-on: ubuntu-latest
 
     steps:
