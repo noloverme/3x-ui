@@ -3113,7 +3113,8 @@ export const SCHEMAS: Record<string, unknown> = {
           "tun",
           "mtproto",
           "amneziawg",
-          "tuic"
+          "tuic",
+          "masque"
         ],
         "example": "vless",
         "type": "string"
