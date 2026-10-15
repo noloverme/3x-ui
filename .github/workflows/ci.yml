@@ -10,7 +10,7 @@ on:
       - "frontend/**"
       - ".nvmrc"
       - "Makefile"
-      - ".github/workflows/ci.yml"
+      - ".github/workflows/**"
   push:
     branches:
       - main
@@ -21,7 +21,7 @@ on:
       - "frontend/**"
       - ".nvmrc"
       - "Makefile"
-      - ".github/workflows/ci.yml"
+      - ".github/workflows/**"
 
 permissions:
   contents: read
