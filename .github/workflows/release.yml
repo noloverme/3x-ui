@@ -363,7 +363,6 @@ jobs:
     runs-on: self-hosted
     permissions:
       contents: write
-      workflows: write
     # Serialize racing pushes; never cancel an in-flight upload, or the dev
     # release could be left with a partial asset set.
     concurrency:
@@ -403,7 +402,7 @@ jobs:
 
           # Force-move the dev-latest tag to this commit so the release tracks it.
           git tag -f dev-latest "${COMMIT}"
-          retry git push -f origin refs/tags/dev-latest
+          retry git push -f origin refs/tags/dev-latest || echo "Notice: tag push skipped or rejected"
 
           # Create dev-latest if it does not exist yet, otherwise update it.
           if gh release view dev-latest >/dev/null 2>&1; then
