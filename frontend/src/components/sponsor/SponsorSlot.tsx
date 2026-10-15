@@ -4,8 +4,6 @@ import type { SponsorCardVariant } from './SponsorCard';
 interface SponsorSlotProps {
   slot: Slot;
   variant?: SponsorCardVariant;
-  iconOnly?: boolean;
-  rotate?: boolean;
   className?: string;
 }
 
