@@ -20,7 +20,7 @@ on:
       - "x-ui.service.debian"
       - "x-ui.service.arch"
       - "x-ui.service.rhel"
-      - ".github/workflows/**"
+      - ".github/workflows/release.yml"
 
 jobs:
   build:
@@ -38,7 +38,7 @@ jobs:
           - 386
           - armv5
           - s390x
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -360,7 +360,7 @@ jobs:
     name: Publish rolling dev release
     needs: [build, build-windows]
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || github.ref_name == 'main')
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     # Serialize racing pushes; never cancel an in-flight upload, or the dev
@@ -404,13 +404,12 @@ jobs:
           git tag -f dev-latest "${COMMIT}"
           retry git push -f origin refs/tags/dev-latest || echo "Notice: tag push skipped or rejected"
 
-          # Create dev-latest if it does not exist yet, otherwise update it.
-          if gh release view dev-latest >/dev/null 2>&1; then
-            retry gh release edit dev-latest --prerelease --latest=false \
-              --title "Dev build ${short}" --notes "${notes}"
-          else
+          # The release exists on every run but the first; edit-first avoids an
+          # existence probe that can 503 and mis-route into create (422).
+          if ! retry gh release edit dev-latest --prerelease --latest=false \
+              --title "Dev build ${short}" --notes "${notes}"; then
             retry gh release create dev-latest --prerelease --latest=false \
-              --title "Dev build ${short}" --notes "${notes}"
+              --target "${COMMIT}" --title "Dev build ${short}" --notes "${notes}"
           fi
 
           retry gh release upload dev-latest dev-artifacts/*.tar.gz dev-artifacts/*.zip dev-artifacts/*.sha256 --clobber
@@ -422,7 +421,7 @@ jobs:
     name: Finalize stable release
     needs: [build, build-windows]
     if: startsWith(github.ref, 'refs/tags/')
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:

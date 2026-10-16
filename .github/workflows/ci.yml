@@ -28,7 +28,7 @@ permissions:
 
 jobs:
   go-test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -43,7 +43,7 @@ jobs:
           go test -shuffle=on -count=1 $(cat /tmp/go-packages.txt)
 
   postgres-durable-first:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16
@@ -94,7 +94,7 @@ jobs:
           fi
 
   codegen:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -111,7 +111,7 @@ jobs:
         run: git diff --exit-code -- frontend/src/generated frontend/public/openapi.json
 
   govulncheck:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -127,7 +127,7 @@ jobs:
 
   # Race + shuffle hygiene gate: data races and order-dependent tests fail the build.
   race:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -145,7 +145,7 @@ jobs:
   # A real master and node panel, each its own process, driven through node sync.
   # A SKIP here means the binary was never handed over, so it fails the job.
   node-e2e:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -161,7 +161,7 @@ jobs:
   # Brief native-fuzz smoke on the security-/parser-critical decoders. Each runs the
   # generated corpus plus 30s of exploration; a crash here is a real input-handling bug.
   fuzz-smoke:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -176,7 +176,7 @@ jobs:
           go test -run '^$' -fuzz 'FuzzDecodeCertPin$' -fuzztime=30s ./internal/web/runtime/
 
   golangci:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -191,7 +191,7 @@ jobs:
           version: latest
 
   frontend:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

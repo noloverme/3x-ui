@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   gremlins:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
       fail-fast: false
