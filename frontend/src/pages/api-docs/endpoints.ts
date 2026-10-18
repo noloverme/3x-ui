@@ -1568,6 +1568,14 @@ export const sections: readonly Section[] = [
         ],
       },
       {
+        method: 'GET',
+        path: '/panel/api/clients/analytics/devices',
+        summary:
+          'Aggregated client subscription and registered device analytics across all clients, including multi-subscription intersections.',
+        response:
+          '{\n  "success": true,\n  "obj": {\n    "stats": {\n      "totalSubscriptions": 12,\n      "totalDevices": 34,\n      "sharedDevices": 3,\n      "totalIntersections": 3\n    },\n    "subscriptions": [\n      {\n        "subId": "sub-123456",\n        "emails": ["user1@example.com"],\n        "uuids": ["11111111-1111-1111-1111-111111111111"],\n        "deviceCount": 2,\n        "deviceKeys": ["a1b2c3d4e5f6"],\n        "sharedCount": 1\n      }\n    ],\n    "devices": [\n      {\n        "key": "a1b2c3d4e5f6",\n        "fingerprint": "a1b2c3d4e5f6",\n        "deviceModel": "Pixel 9",\n        "deviceOs": "android",\n        "userAgent": "Happ/1.0",\n        "ip": "1.2.3.4",\n        "subIds": ["sub-123456"],\n        "emails": ["user1@example.com"],\n        "isShared": false,\n        "firstSeen": 1735000000000,\n        "lastSeen": 1735100000000\n      }\n    ]\n  }\n}',
+      },
+      {
         method: 'POST',
         path: '/panel/api/clients/onlines',
         summary:

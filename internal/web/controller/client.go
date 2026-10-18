@@ -741,4 +741,3 @@ func (a *ClientController) getDeviceAnalytics(c *gin.Context) {
 	}
 	jsonObj(c, data, nil)
 }
-

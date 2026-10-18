@@ -1006,7 +1006,18 @@
       "renewsUsed": "Renovaciones usadas",
       "bulkAdTagHint": "Introduce una etiqueta hexadecimal de 32 caracteres para asignar, o 'none' para borrarla en MTProto.",
       "renewIntervalDesc": "Tras expirar, añade el número configurado de días de 24 horas al vencimiento anterior y reinicia el tráfico del cliente. Mantén desactivados los reinicios de tráfico independientes salvo que quieras un reinicio adicional.",
-      "renewWeeklyDesc": "La renovación por calendario se realiza a medianoche en la zona horaria del panel y también reinicia el tráfico del cliente. Mantén desactivados los reinicios de tráfico independientes salvo que quieras un reinicio adicional."
+      "renewWeeklyDesc": "La renovación por calendario se realiza a medianoche en la zona horaria del panel y también reinicia el tráfico del cliente. Mantén desactivados los reinicios de tráfico independientes salvo que quieras un reinicio adicional.",
+      "deviceAnalytics": "Device Analytics",
+      "deviceAnalyticsTitle": "Subscription & Device Analytics",
+      "totalSubscriptions": "Total Subscriptions",
+      "totalDevices": "Total Devices",
+      "sharedDevices": "Intersections (Shared)",
+      "viewGraph": "Network Grid",
+      "viewTable": "Intersection Table",
+      "onlyIntersections": "Only Intersections",
+      "deviceDetails": "Device Details",
+      "subscriptionDetails": "Subscription Details",
+      "noDevicesFound": "No devices registered yet"
     },
     "groups": {
       "name": "Nombre",

@@ -1006,7 +1006,18 @@
       "renewsUsed": "已用续期次数",
       "bulkAdTagHint": "输入 32 位十六进制标签以设置，或输入 'none' 清除 MTProto 赞助频道。",
       "renewIntervalDesc": "到期后从上次截止时间增加指定天数（每天 24 小时），并重置客户端流量。若不需要额外重置，请关闭独立的流量重置。",
-      "renewWeeklyDesc": "日历续期按面板时区的午夜执行，并重置客户端流量。若不需要额外重置，请关闭独立的流量重置。"
+      "renewWeeklyDesc": "日历续期按面板时区的午夜执行，并重置客户端流量。若不需要额外重置，请关闭独立的流量重置。",
+      "deviceAnalytics": "设备分析",
+      "deviceAnalyticsTitle": "订阅与设备分析",
+      "totalSubscriptions": "订阅总数",
+      "totalDevices": "设备总数",
+      "sharedDevices": "交叉关联（共享）",
+      "viewGraph": "关联拓扑图",
+      "viewTable": "关联列表",
+      "onlyIntersections": "仅显示共享设备",
+      "deviceDetails": "设备详情",
+      "subscriptionDetails": "订阅详情",
+      "noDevicesFound": "暂无已注册设备"
     },
     "groups": {
       "name": "名称",

@@ -1006,7 +1006,18 @@
       "renewsUsed": "التجديدات المستخدمة",
       "bulkAdTagHint": "أدخل علامة من 32 حرفًا ست عشريًا للتعيين، أو 'none' للمسح في منافذ MTProto.",
       "renewIntervalDesc": "بعد انتهاء الصلاحية، يُضاف عدد الأيام المحدد (24 ساعة لكل يوم) إلى الموعد النهائي السابق ويُعاد تعيين استهلاك العميل. أبقِ إعادة تعيين الاستهلاك المستقلة معطلة ما لم تكن تريد إعادة تعيين إضافية.",
-      "renewWeeklyDesc": "يتم التجديد التقويمي عند منتصف الليل بتوقيت اللوحة ويُعاد أيضًا تعيين استهلاك العميل. أبقِ إعادة تعيين الاستهلاك المستقلة معطلة ما لم تكن تريد إعادة تعيين إضافية."
+      "renewWeeklyDesc": "يتم التجديد التقويمي عند منتصف الليل بتوقيت اللوحة ويُعاد أيضًا تعيين استهلاك العميل. أبقِ إعادة تعيين الاستهلاك المستقلة معطلة ما لم تكن تريد إعادة تعيين إضافية.",
+      "deviceAnalytics": "Device Analytics",
+      "deviceAnalyticsTitle": "Subscription & Device Analytics",
+      "totalSubscriptions": "Total Subscriptions",
+      "totalDevices": "Total Devices",
+      "sharedDevices": "Intersections (Shared)",
+      "viewGraph": "Network Grid",
+      "viewTable": "Intersection Table",
+      "onlyIntersections": "Only Intersections",
+      "deviceDetails": "Device Details",
+      "subscriptionDetails": "Subscription Details",
+      "noDevicesFound": "No devices registered yet"
     },
     "groups": {
       "name": "الاسم",

@@ -706,4 +706,3 @@ func sliceContains(s []string, val string) bool {
 	}
 	return false
 }
-

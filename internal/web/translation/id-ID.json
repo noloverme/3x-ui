@@ -1006,7 +1006,18 @@
       "renewsUsed": "Perpanjangan terpakai",
       "bulkAdTagHint": "Masukkan tag heksadesimal 32 karakter untuk mengatur, atau 'none' untuk menghapus pada MTProto.",
       "renewIntervalDesc": "Setelah kedaluwarsa, menambahkan jumlah hari yang ditentukan (24 jam per hari) ke batas waktu sebelumnya dan mereset trafik klien. Nonaktifkan reset trafik terpisah kecuali Anda menginginkan reset tambahan.",
-      "renewWeeklyDesc": "Perpanjangan kalender dilakukan pada tengah malam menurut zona waktu panel dan juga mereset trafik klien. Nonaktifkan reset trafik terpisah kecuali Anda menginginkan reset tambahan."
+      "renewWeeklyDesc": "Perpanjangan kalender dilakukan pada tengah malam menurut zona waktu panel dan juga mereset trafik klien. Nonaktifkan reset trafik terpisah kecuali Anda menginginkan reset tambahan.",
+      "deviceAnalytics": "Device Analytics",
+      "deviceAnalyticsTitle": "Subscription & Device Analytics",
+      "totalSubscriptions": "Total Subscriptions",
+      "totalDevices": "Total Devices",
+      "sharedDevices": "Intersections (Shared)",
+      "viewGraph": "Network Grid",
+      "viewTable": "Intersection Table",
+      "onlyIntersections": "Only Intersections",
+      "deviceDetails": "Device Details",
+      "subscriptionDetails": "Subscription Details",
+      "noDevicesFound": "No devices registered yet"
     },
     "groups": {
       "name": "Nama",

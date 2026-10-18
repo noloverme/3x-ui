@@ -458,4 +458,3 @@ func TestGetDeviceAnalytics(t *testing.T) {
 		t.Errorf("expected sharedDev to have 2 Emails, got %d", len(sharedDev.Emails))
 	}
 }
-
