@@ -30,6 +30,7 @@ import {
 } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import {
+  ApartmentOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   DeleteOutlined,
@@ -93,6 +94,9 @@ const BulkAttachInboundsModal = lazy(() => import('./BulkAttachInboundsModal'));
 const BulkDetachInboundsModal = lazy(() => import('./BulkDetachInboundsModal'));
 const TextModal = lazy(() => import('@/components/feedback/TextModal'));
 const PromptModal = lazy(() => import('@/components/feedback/PromptModal'));
+const ClientDeviceAnalyticsModal = lazy(
+  () => import('@/components/clients/ClientDeviceAnalyticsModal'),
+);
 import { ClientInboundChips, ClientRowActions } from './RowCells';
 import { emptyFilters, activeFilterCount } from './filters';
 import type { ClientFilters } from './filters';
@@ -416,6 +420,7 @@ export default function ClientsPage() {
   const [bulkAttachOpen, setBulkAttachOpen] = useState(false);
   const [bulkDetachOpen, setBulkDetachOpen] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [analyticsModalOpen, setAnalyticsModalOpen] = useState(false);
 
   const [textOpen, setTextOpen] = useState(false);
   const [textTitle, setTextTitle] = useState('');
@@ -1495,6 +1500,12 @@ export default function ClientsPage() {
                                         onClick: () => setBulkAttachOpen(true),
                                       },
                                       {
+                                        key: 'deviceAnalytics',
+                                        icon: <ApartmentOutlined />,
+                                        label: t('pages.clients.deviceAnalytics'),
+                                        onClick: () => setAnalyticsModalOpen(true),
+                                      },
+                                      {
                                         key: 'export',
                                         icon: <DownloadOutlined />,
                                         label: t('pages.clients.exportClients'),
@@ -1534,6 +1545,13 @@ export default function ClientsPage() {
                               {!isMobile && t('more')}
                             </Button>
                           </Dropdown>
+                          <Button
+                            icon={<ApartmentOutlined />}
+                            onClick={() => setAnalyticsModalOpen(true)}
+                            aria-label={t('pages.clients.deviceAnalytics')}
+                          >
+                            {!isMobile && t('pages.clients.deviceAnalytics')}
+                          </Button>
                           {selectedRowKeys.length > 0 && (
                             <Button
                               danger
@@ -2067,6 +2085,12 @@ export default function ClientsPage() {
             loading={promptLoading}
             json
             onConfirm={onPromptConfirm}
+          />
+        </LazyMount>
+        <LazyMount when={analyticsModalOpen}>
+          <ClientDeviceAnalyticsModal
+            open={analyticsModalOpen}
+            onClose={() => setAnalyticsModalOpen(false)}
           />
         </LazyMount>
       </Layout>

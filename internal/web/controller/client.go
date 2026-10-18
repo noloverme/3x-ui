@@ -91,6 +91,7 @@ func (a *ClientController) initRouter(g *gin.RouterGroup) {
 	g.POST("/clientIpsByGuid", a.clientIpsByGuid)
 	g.POST("/activeInbounds", a.activeInbounds)
 	g.POST("/lastOnline", a.lastOnline)
+	g.GET("/analytics/devices", a.getDeviceAnalytics)
 }
 
 func (a *ClientController) list(c *gin.Context) {
@@ -731,3 +732,13 @@ func (a *ClientController) bulkResetTraffic(c *gin.Context) {
 	a.xrayService.SetToNeedRestart()
 	notifyClientsChanged()
 }
+
+func (a *ClientController) getDeviceAnalytics(c *gin.Context) {
+	data, err := a.clientService.GetDeviceAnalytics()
+	if err != nil {
+		jsonMsg(c, I18nWeb(c, "pages.inbounds.toasts.obtain"), err)
+		return
+	}
+	jsonObj(c, data, nil)
+}
+

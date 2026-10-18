@@ -353,3 +353,109 @@ func TestClientHwidAndIPPersistence(t *testing.T) {
 		t.Fatalf("noHwidEntry missing: %+v", noHwidEntry)
 	}
 }
+
+func TestGetDeviceAnalytics(t *testing.T) {
+	initClientHwidTestDB(t)
+	svc := &ClientService{}
+	db := database.GetDB()
+
+	// Seed two clients with different subscriptions
+	sub1Client := &model.ClientRecord{
+		Email:  "user1@test.com",
+		SubID:  "sub-alpha",
+		UUID:   "11111111-1111-1111-1111-111111111111",
+		Enable: true,
+	}
+	sub2Client := &model.ClientRecord{
+		Email:  "user2@test.com",
+		SubID:  "sub-beta",
+		UUID:   "22222222-2222-2222-2222-222222222222",
+		Enable: true,
+	}
+	if err := db.Create(sub1Client).Error; err != nil {
+		t.Fatalf("seed client 1: %v", err)
+	}
+	if err := db.Create(sub2Client).Error; err != nil {
+		t.Fatalf("seed client 2: %v", err)
+	}
+
+	// Device A connects to sub-alpha AND sub-beta (shared / intersection)
+	hashA := hashHwid("device-shared-uuid-12345")
+	hwidA1 := &model.ClientHwid{
+		SubID:       "sub-alpha",
+		HwidHash:    hashA,
+		DeviceModel: "iPhone 15 Pro",
+		DeviceOS:    "iOS",
+		IP:          "1.1.1.1",
+		FirstSeen:   1000,
+		LastSeen:    2000,
+	}
+	hwidA2 := &model.ClientHwid{
+		SubID:       "sub-beta",
+		HwidHash:    hashA,
+		DeviceModel: "iPhone 15 Pro",
+		DeviceOS:    "iOS",
+		IP:          "1.1.1.2",
+		FirstSeen:   1500,
+		LastSeen:    2500,
+	}
+
+	// Device B connects only to sub-alpha
+	hashB := hashHwid("device-alpha-only-99999")
+	hwidB := &model.ClientHwid{
+		SubID:       "sub-alpha",
+		HwidHash:    hashB,
+		DeviceModel: "Pixel 8",
+		DeviceOS:    "Android",
+		IP:          "2.2.2.2",
+		FirstSeen:   3000,
+		LastSeen:    3500,
+	}
+
+	if err := db.Create(hwidA1).Error; err != nil {
+		t.Fatalf("create hwidA1: %v", err)
+	}
+	if err := db.Create(hwidA2).Error; err != nil {
+		t.Fatalf("create hwidA2: %v", err)
+	}
+	if err := db.Create(hwidB).Error; err != nil {
+		t.Fatalf("create hwidB: %v", err)
+	}
+
+	analytics, err := svc.GetDeviceAnalytics()
+	if err != nil {
+		t.Fatalf("GetDeviceAnalytics failed: %v", err)
+	}
+
+	if analytics.Stats.TotalSubscriptions != 2 {
+		t.Errorf("got %d subscriptions, want 2", analytics.Stats.TotalSubscriptions)
+	}
+	if analytics.Stats.TotalDevices != 2 {
+		t.Errorf("got %d devices, want 2", analytics.Stats.TotalDevices)
+	}
+	if analytics.Stats.SharedDevices != 1 {
+		t.Errorf("got %d shared devices, want 1", analytics.Stats.SharedDevices)
+	}
+
+	// Find shared device
+	var sharedDev *DeviceAnalyticsDevice
+	for i := range analytics.Devices {
+		if analytics.Devices[i].Key == hashA {
+			sharedDev = &analytics.Devices[i]
+			break
+		}
+	}
+	if sharedDev == nil {
+		t.Fatalf("shared device with hashA not found")
+	}
+	if !sharedDev.IsShared {
+		t.Errorf("expected sharedDev.IsShared = true")
+	}
+	if len(sharedDev.SubIDs) != 2 {
+		t.Errorf("expected sharedDev to have 2 SubIDs, got %d", len(sharedDev.SubIDs))
+	}
+	if len(sharedDev.Emails) != 2 {
+		t.Errorf("expected sharedDev to have 2 Emails, got %d", len(sharedDev.Emails))
+	}
+}
+

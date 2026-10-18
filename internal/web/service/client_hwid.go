@@ -489,3 +489,221 @@ func clearClientHwidsBySubIDTx(tx *gorm.DB, subIDs ...string) error {
 	}
 	return nil
 }
+
+type DeviceAnalyticsSubscription struct {
+	SubID       string   `json:"subId"`
+	Emails      []string `json:"emails"`
+	UUIDs       []string `json:"uuids"`
+	DeviceCount int      `json:"deviceCount"`
+	DeviceKeys  []string `json:"deviceKeys"`
+	SharedCount int      `json:"sharedCount"`
+}
+
+type DeviceAnalyticsDevice struct {
+	Key         string   `json:"key"`
+	Fingerprint string   `json:"fingerprint"`
+	DeviceModel string   `json:"deviceModel"`
+	DeviceOS    string   `json:"deviceOs"`
+	OsVersion   string   `json:"osVersion"`
+	UserAgent   string   `json:"userAgent"`
+	IP          string   `json:"ip"`
+	Ips         []string `json:"ips"`
+	FirstSeen   int64    `json:"firstSeen"`
+	LastSeen    int64    `json:"lastSeen"`
+	SubIDs      []string `json:"subIds"`
+	Emails      []string `json:"emails"`
+	IsShared    bool     `json:"isShared"`
+}
+
+type DeviceAnalyticsStats struct {
+	TotalSubscriptions int `json:"totalSubscriptions"`
+	TotalDevices       int `json:"totalDevices"`
+	SharedDevices      int `json:"sharedDevices"`
+	TotalIntersections int `json:"totalIntersections"`
+}
+
+type DeviceAnalyticsData struct {
+	Stats         DeviceAnalyticsStats          `json:"stats"`
+	Subscriptions []DeviceAnalyticsSubscription `json:"subscriptions"`
+	Devices       []DeviceAnalyticsDevice       `json:"devices"`
+}
+
+func (s *ClientService) GetDeviceAnalytics() (*DeviceAnalyticsData, error) {
+	db := database.GetDB()
+
+	var clientRecords []model.ClientRecord
+	if err := db.Where("sync_orphaned_at = 0").Order("id ASC").Find(&clientRecords).Error; err != nil {
+		return nil, err
+	}
+
+	var hwidRows []model.ClientHwid
+	if err := db.Order("last_seen DESC").Order("id DESC").Find(&hwidRows).Error; err != nil {
+		return nil, err
+	}
+
+	subOrder := make([]string, 0)
+	subToEmails := make(map[string][]string)
+	subToUUIDs := make(map[string][]string)
+	subToDeviceKeys := make(map[string][]string)
+
+	for _, c := range clientRecords {
+		sub := strings.TrimSpace(c.SubID)
+		if sub == "" {
+			continue
+		}
+		if _, exists := subToEmails[sub]; !exists {
+			subOrder = append(subOrder, sub)
+			subToEmails[sub] = make([]string, 0, 1)
+			subToUUIDs[sub] = make([]string, 0, 1)
+			subToDeviceKeys[sub] = make([]string, 0)
+		}
+		if c.Email != "" && !sliceContains(subToEmails[sub], c.Email) {
+			subToEmails[sub] = append(subToEmails[sub], c.Email)
+		}
+		if c.UUID != "" && !sliceContains(subToUUIDs[sub], c.UUID) {
+			subToUUIDs[sub] = append(subToUUIDs[sub], c.UUID)
+		}
+	}
+
+	deviceMap := make(map[string]*DeviceAnalyticsDevice)
+	deviceOrder := make([]string, 0)
+
+	for _, r := range hwidRows {
+		subID := strings.TrimSpace(r.SubID)
+		hwidKey := strings.TrimSpace(r.HwidHash)
+		if hwidKey == "" {
+			hwidKey = "id-" + strings.TrimSpace(r.IP) + "-" + strings.TrimSpace(r.DeviceModel)
+			if hwidKey == "id--" {
+				continue
+			}
+		}
+
+		dev, exists := deviceMap[hwidKey]
+		if !exists {
+			deviceOrder = append(deviceOrder, hwidKey)
+			ips := parseIps(r.Ips, r.IP)
+			fp := shortHwidFingerprint(r.HwidHash)
+			if fp == "" {
+				fp = hwidKey
+				if len(fp) > 16 {
+					fp = fp[:16]
+				}
+			}
+			dev = &DeviceAnalyticsDevice{
+				Key:         hwidKey,
+				Fingerprint: fp,
+				DeviceModel: r.DeviceModel,
+				DeviceOS:    r.DeviceOS,
+				OsVersion:   r.OsVersion,
+				UserAgent:   r.UserAgent,
+				IP:          r.IP,
+				Ips:         ips,
+				FirstSeen:   r.FirstSeen,
+				LastSeen:    r.LastSeen,
+				SubIDs:      make([]string, 0, 1),
+				Emails:      make([]string, 0, 1),
+			}
+			deviceMap[hwidKey] = dev
+		} else {
+			if r.FirstSeen < dev.FirstSeen && r.FirstSeen > 0 {
+				dev.FirstSeen = r.FirstSeen
+			}
+			if r.LastSeen > dev.LastSeen {
+				dev.LastSeen = r.LastSeen
+			}
+			if dev.DeviceModel == "" && r.DeviceModel != "" {
+				dev.DeviceModel = r.DeviceModel
+			}
+			if dev.DeviceOS == "" && r.DeviceOS != "" {
+				dev.DeviceOS = r.DeviceOS
+			}
+			if dev.IP == "" && r.IP != "" {
+				dev.IP = r.IP
+			}
+			for _, ip := range parseIps(r.Ips, r.IP) {
+				if !sliceContains(dev.Ips, ip) {
+					dev.Ips = append(dev.Ips, ip)
+				}
+			}
+		}
+
+		if subID != "" {
+			if !sliceContains(dev.SubIDs, subID) {
+				dev.SubIDs = append(dev.SubIDs, subID)
+			}
+			if _, ok := subToDeviceKeys[subID]; ok {
+				if !sliceContains(subToDeviceKeys[subID], hwidKey) {
+					subToDeviceKeys[subID] = append(subToDeviceKeys[subID], hwidKey)
+				}
+			} else {
+				subOrder = append(subOrder, subID)
+				subToEmails[subID] = make([]string, 0)
+				subToUUIDs[subID] = make([]string, 0)
+				subToDeviceKeys[subID] = []string{hwidKey}
+			}
+		}
+	}
+
+	sharedDevices := 0
+	for _, key := range deviceOrder {
+		dev := deviceMap[key]
+		for _, sub := range dev.SubIDs {
+			for _, email := range subToEmails[sub] {
+				if !sliceContains(dev.Emails, email) {
+					dev.Emails = append(dev.Emails, email)
+				}
+			}
+		}
+		if len(dev.SubIDs) > 1 || len(dev.Emails) > 1 {
+			dev.IsShared = true
+			sharedDevices++
+		}
+	}
+
+	subscriptions := make([]DeviceAnalyticsSubscription, 0, len(subOrder))
+	for _, sub := range subOrder {
+		keys := subToDeviceKeys[sub]
+		sharedInSub := 0
+		for _, k := range keys {
+			if dev, ok := deviceMap[k]; ok && dev.IsShared {
+				sharedInSub++
+			}
+		}
+		subscriptions = append(subscriptions, DeviceAnalyticsSubscription{
+			SubID:       sub,
+			Emails:      subToEmails[sub],
+			UUIDs:       subToUUIDs[sub],
+			DeviceCount: len(keys),
+			DeviceKeys:  keys,
+			SharedCount: sharedInSub,
+		})
+	}
+
+	devices := make([]DeviceAnalyticsDevice, 0, len(deviceOrder))
+	for _, key := range deviceOrder {
+		devices = append(devices, *deviceMap[key])
+	}
+
+	stats := DeviceAnalyticsStats{
+		TotalSubscriptions: len(subscriptions),
+		TotalDevices:       len(devices),
+		SharedDevices:      sharedDevices,
+		TotalIntersections: sharedDevices,
+	}
+
+	return &DeviceAnalyticsData{
+		Stats:         stats,
+		Subscriptions: subscriptions,
+		Devices:       devices,
+	}, nil
+}
+
+func sliceContains(s []string, val string) bool {
+	for _, item := range s {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
