@@ -5,7 +5,7 @@ import (
 )
 
 func TestAutoSelectClashGroups(t *testing.T) {
-	svc := NewSubClashService(false, "", nil)
+	svc := NewSubClashService(false, "", false, nil)
 
 	// When autoSelect is disabled
 	svc.SetAutoSelect(false, "Auto")
