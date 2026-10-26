@@ -217,7 +217,7 @@ export default function InboundList({
       },
       {
         key: 'subOrder',
-        icon: <OrderedListOutlined />,
+        icon: <OrderedListOutlined aria-hidden />,
         label: t('pages.inbounds.subOrder', 'Порядок в подписке'),
       },
     ],
@@ -238,7 +238,7 @@ export default function InboundList({
             {!isMobile && t('pages.inbounds.addInbound')}
           </Button>
           <Button
-            icon={<OrderedListOutlined />}
+            icon={<OrderedListOutlined aria-hidden />}
             onClick={onOpenSubOrder}
             aria-label={t('pages.inbounds.subOrder', 'Порядок в подписке')}
           >

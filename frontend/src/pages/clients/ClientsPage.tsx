@@ -1424,7 +1424,7 @@ export default function ClientsPage() {
                               </Tag>
                               <Button
                                 type="primary"
-                                icon={<UsergroupAddOutlined />}
+                                icon={<UsergroupAddOutlined aria-hidden />}
                                 onClick={() => setBulkAttachOpen(true)}
                               >
                                 {!isMobile && t('pages.clients.attach')}
@@ -1500,13 +1500,13 @@ export default function ClientsPage() {
                                       },
                                       {
                                         key: 'attach',
-                                        icon: <UsergroupAddOutlined />,
+                                        icon: <UsergroupAddOutlined aria-hidden />,
                                         label: t('pages.clients.attach'),
                                         onClick: () => setBulkAttachOpen(true),
                                       },
                                       {
                                         key: 'deviceAnalytics',
-                                        icon: <ApartmentOutlined />,
+                                        icon: <ApartmentOutlined aria-hidden />,
                                         label: t('pages.clients.deviceAnalytics'),
                                         onClick: () => setAnalyticsModalOpen(true),
                                       },
@@ -1551,7 +1551,7 @@ export default function ClientsPage() {
                             </Button>
                           </Dropdown>
                           <Button
-                            icon={<ApartmentOutlined />}
+                            icon={<ApartmentOutlined aria-hidden />}
                             onClick={() => setAnalyticsModalOpen(true)}
                             aria-label={t('pages.clients.deviceAnalytics')}
                           >

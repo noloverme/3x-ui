@@ -654,9 +654,9 @@ export default function ClientDeviceAnalyticsModal({
         <Space size={6}>
           {row.deviceOs?.toLowerCase().includes('android') ||
           row.deviceOs?.toLowerCase().includes('ios') ? (
-            <MobileOutlined />
+            <MobileOutlined aria-hidden />
           ) : (
-            <DesktopOutlined />
+            <DesktopOutlined aria-hidden />
           )}
           <span>
             {row.deviceModel || row.deviceOs || 'Unknown'} {row.osVersion && `(${row.osVersion})`}
@@ -713,7 +713,7 @@ export default function ClientDeviceAnalyticsModal({
       width={1000}
       title={
         <Space>
-          <ApartmentOutlined style={{ color: token.colorPrimary }} />
+          <ApartmentOutlined aria-hidden style={{ color: token.colorPrimary }} />
           <span>{t('pages.clients.deviceAnalyticsTitle')}</span>
         </Space>
       }
@@ -758,12 +758,12 @@ export default function ClientDeviceAnalyticsModal({
               {
                 label: t('pages.clients.viewGraph'),
                 value: 'graph',
-                icon: <NodeIndexOutlined />,
+                icon: <NodeIndexOutlined aria-hidden />,
               },
               {
                 label: t('pages.clients.viewTable'),
                 value: 'table',
-                icon: <TableOutlined />,
+                icon: <TableOutlined aria-hidden />,
               },
             ]}
           />
@@ -771,12 +771,18 @@ export default function ClientDeviceAnalyticsModal({
             value={searchKey}
             onChange={(e) => setSearchKey(e.target.value)}
             placeholder={t('pages.clients.searchPlaceholder')}
-            prefix={<SearchOutlined />}
+            aria-label={t('pages.clients.searchPlaceholder')}
+            prefix={<SearchOutlined aria-hidden />}
             allowClear
             style={{ width: 220 }}
           />
           <Space>
-            <Switch checked={onlyShared} onChange={setOnlyShared} size="small" />
+            <Switch
+              checked={onlyShared}
+              onChange={setOnlyShared}
+              size="small"
+              aria-label={t('pages.clients.onlyIntersections')}
+            />
             <Text style={{ fontSize: 13 }}>{t('pages.clients.onlyIntersections')}</Text>
           </Space>
         </div>
@@ -784,9 +790,10 @@ export default function ClientDeviceAnalyticsModal({
         <div className="device-analytics-toolbar-right">
           <Tooltip title={t('reload')}>
             <Button
-              icon={<ReloadOutlined spin={loading} />}
+              icon={<ReloadOutlined aria-hidden spin={loading} />}
               onClick={fetchAnalytics}
               loading={loading}
+              aria-label={t('reload')}
             />
           </Tooltip>
         </div>
@@ -812,8 +819,18 @@ export default function ClientDeviceAnalyticsModal({
 
           {/* Graph Controls */}
           <div className="device-analytics-graph-controls">
-            <Button size="small" icon={<ZoomInOutlined />} onClick={zoomIn} />
-            <Button size="small" icon={<ZoomOutOutlined />} onClick={zoomOut} />
+            <Button
+              size="small"
+              aria-label="Zoom in"
+              icon={<ZoomInOutlined aria-hidden />}
+              onClick={zoomIn}
+            />
+            <Button
+              size="small"
+              aria-label="Zoom out"
+              icon={<ZoomOutOutlined aria-hidden />}
+              onClick={zoomOut}
+            />
             <Button size="small" onClick={resetZoom}>
               1:1
             </Button>
@@ -847,7 +864,8 @@ export default function ClientDeviceAnalyticsModal({
                 <Button
                   type="text"
                   size="small"
-                  icon={<CloseOutlined />}
+                  aria-label={t('close')}
+                  icon={<CloseOutlined aria-hidden />}
                   onClick={() => setSelectedNode(null)}
                 />
               </div>

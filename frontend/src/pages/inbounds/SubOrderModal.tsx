@@ -130,7 +130,7 @@ export default function SubOrderModal({ open, dbInbounds, onClose, onSaved }: Su
       open={open}
       title={
         <Space>
-          <OrderedListOutlined />
+          <OrderedListOutlined aria-hidden />
           <span>Порядок протоколов в подписке</span>
         </Space>
       }
@@ -158,10 +158,14 @@ export default function SubOrderModal({ open, dbInbounds, onClose, onSaved }: Su
       <div style={{ marginBottom: 12 }}>
         <Space wrap style={{ width: '100%', justifyContent: 'space-between' }}>
           <Space>
-            <Button size="small" icon={<CheckCircleOutlined />} onClick={handleSelectAll}>
+            <Button
+              size="small"
+              icon={<CheckCircleOutlined aria-hidden />}
+              onClick={handleSelectAll}
+            >
               Выбрать все
             </Button>
-            <Button size="small" icon={<ClearOutlined />} onClick={handleClear}>
+            <Button size="small" icon={<ClearOutlined aria-hidden />} onClick={handleClear}>
               Сбросить все (по умолчанию)
             </Button>
           </Space>
@@ -240,18 +244,20 @@ export default function SubOrderModal({ open, dbInbounds, onClose, onSaved }: Su
                         <Button
                           size="small"
                           type="text"
-                          icon={<ArrowUpOutlined />}
+                          icon={<ArrowUpOutlined aria-hidden />}
                           disabled={indexInSelected === 0}
                           onClick={() => moveUp(indexInSelected)}
                           title="Выше"
+                          aria-label="Выше"
                         />
                         <Button
                           size="small"
                           type="text"
-                          icon={<ArrowDownOutlined />}
+                          icon={<ArrowDownOutlined aria-hidden />}
                           disabled={indexInSelected === orderedIds.length - 1}
                           onClick={() => moveDown(indexInSelected)}
                           title="Ниже"
+                          aria-label="Ниже"
                         />
                       </>
                     )}

@@ -180,7 +180,7 @@ export default function BulkAttachInboundsModal({
         open={open}
         title={
           <Space>
-            <UsergroupAddOutlined />
+            <UsergroupAddOutlined aria-hidden />
             <span>{t('pages.clients.attachToInboundsTitle', { count: targetEmails.length })}</span>
           </Space>
         }
@@ -205,7 +205,7 @@ export default function BulkAttachInboundsModal({
 
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
           <Button
-            icon={<CheckSquareOutlined />}
+            icon={<CheckSquareOutlined aria-hidden />}
             type={isAllSelected ? 'primary' : 'default'}
             onClick={selectAllEverything}
           >
@@ -226,10 +226,14 @@ export default function BulkAttachInboundsModal({
           }
           extra={
             <Space size={4}>
-              <Button size="small" icon={<CheckCircleOutlined />} onClick={selectAllClients}>
+              <Button
+                size="small"
+                icon={<CheckCircleOutlined aria-hidden />}
+                onClick={selectAllClients}
+              >
                 Выбрать всех
               </Button>
-              <Button size="small" icon={<ClearOutlined />} onClick={clearClients}>
+              <Button size="small" icon={<ClearOutlined aria-hidden />} onClick={clearClients}>
                 Очистить
               </Button>
             </Space>
@@ -243,6 +247,7 @@ export default function BulkAttachInboundsModal({
             onChange={setTargetEmails}
             options={clientOptions}
             placeholder="Выберите клиентов из списка..."
+            aria-label="Клиенты"
             showSearch={{ optionFilterProp: 'label' }}
             maxTagCount="responsive"
             allowClear
@@ -262,10 +267,14 @@ export default function BulkAttachInboundsModal({
           }
           extra={
             <Space size={4}>
-              <Button size="small" icon={<CheckCircleOutlined />} onClick={selectAllInbounds}>
+              <Button
+                size="small"
+                icon={<CheckCircleOutlined aria-hidden />}
+                onClick={selectAllInbounds}
+              >
                 Выбрать все
               </Button>
-              <Button size="small" icon={<ClearOutlined />} onClick={clearInbounds}>
+              <Button size="small" icon={<ClearOutlined aria-hidden />} onClick={clearInbounds}>
                 Очистить
               </Button>
             </Space>
