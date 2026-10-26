@@ -1046,7 +1046,18 @@
       "renewsUsed": "Použité obnovenia",
       "bulkAdTagHint": "Zadajte 32-znakovú hexadecimálnu značku alebo 'none' na odstránenie sponzorovaného kanála zo vstupov MTProto.",
       "renewIntervalDesc": "Po skončení platnosti pridá nastavený počet 24-hodinových dní k predchádzajúcemu koncu platnosti a vynuluje spotrebu klienta. Samostatné nulovanie spotreby nechajte vypnuté, ak nechcete ďalšie nulovanie navyše.",
-      "renewWeeklyDesc": "Kalendárne obnovenie prebieha o polnoci v časovom pásme panelu a vynuluje aj spotrebu klienta. Samostatné nulovanie spotreby nechajte vypnuté, ak nechcete ďalšie nulovanie navyše."
+      "renewWeeklyDesc": "Kalendárne obnovenie prebieha o polnoci v časovom pásme panelu a vynuluje aj spotrebu klienta. Samostatné nulovanie spotreby nechajte vypnuté, ak nechcete ďalšie nulovanie navyše.",
+      "deviceAnalytics": "Analytika zariadení",
+      "deviceAnalyticsTitle": "Analytika odberov a zariadení",
+      "totalSubscriptions": "Celkový počet odberov",
+      "totalDevices": "Celkový počet zariadení",
+      "sharedDevices": "Prieniky (zdieľané)",
+      "viewGraph": "Sieťový graf",
+      "viewTable": "Tabuľka prienikov",
+      "onlyIntersections": "Iba prieniky",
+      "deviceDetails": "Podrobnosti o zariadení",
+      "subscriptionDetails": "Podrobnosti o odbere",
+      "noDevicesFound": "Zatiaľ nie sú zaregistrované žiadne zariadenia"
     },
     "groups": {
       "name": "Názov",
@@ -1960,7 +1971,16 @@
       "subHostSortMode": "Poradie uzlov v predplatnom",
       "subHostSortInbound": "Poradie inboundov (predvolené)",
       "subHostSortHosts": "Poradie hostiteľov",
-      "subHostSortModeDesc": "Poradie hostiteľov sa riadi stránkou Hostitelia naprieč inboundmi. Určuje poradie, ktoré odosiela server; klientske aplikácie môžu použiť vlastné triedenie."
+      "subHostSortModeDesc": "Poradie hostiteľov sa riadi stránkou Hostitelia naprieč inboundmi. Určuje poradie, ktoré odosiela server; klientske aplikácie môžu použiť vlastné triedenie.",
+      "subAutoSelect": "Automatický výber servera",
+      "subAutoSelectDesc": "Automaticky otestuje a vyberie najrýchlejší funkčný server. Zobrazí sa iba vtedy, ak má klient 2 alebo viac serverov.",
+      "subAutoSelectTitle": "Názov automatického výberu",
+      "subAutoSelectTitleDesc": "Názov zobrazený klientovi pre položku automatického výberu servera. Predvolené: 'Auto'.",
+      "subDefaultFormat": "Predvolený formát odberu",
+      "subDefaultFormatDesc": "Formát poskytovaný v predvolenom nastavení na štandardných adresách URL odberu (/sub/...). Nastavte na JSON pre automatický výber servera a vyvažovanie záťaže.",
+      "subDefaultFormatRaw": "Obyčajné odkazy (Base64)",
+      "subDefaultFormatJson": "Xray JSON (s automatickým výberom)",
+      "subDefaultFormatClash": "Clash / Mihomo (YAML)"
     },
     "xray": {
       "save": "Uložiť",

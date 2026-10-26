@@ -17,4 +17,5 @@ export const LEGACY_I18N_KEYS = [
   'pages.sponsors.available',
   'pages.sponsors.takenUntil',
   'pages.sponsors.activeCount',
+  'menu.sponsors',
 ];
